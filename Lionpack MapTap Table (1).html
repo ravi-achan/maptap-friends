@@ -1,0 +1,652 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lionpack MapTap Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#eef2f0; --card:#fbfcfb; --ink:#13201b; --ink2:#4c5a54; --muted:#76837d; --line:#d6ddd9; --grid:#e3e8e5;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --hi:#13201b; --chip:#e4ebe7;
+  --good:#1f7a4a; --bad:#b93a32; --pos:#2a78d6; --neg:#e34948;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){color-scheme:dark;
+    --bg:#0f1513; --card:#161e1b; --ink:#eef3f0; --ink2:#b7c3bd; --muted:#8a9791; --line:#2b3632; --grid:#222c28;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --hi:#eef3f0; --chip:#222c28; --good:#5cc08a; --bad:#ef7b72; --pos:#3987e5; --neg:#e66767;}
+}
+:root[data-theme="dark"]{color-scheme:dark;
+    --bg:#0f1513; --card:#161e1b; --ink:#eef3f0; --ink2:#b7c3bd; --muted:#8a9791; --line:#2b3632; --grid:#222c28;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --hi:#eef3f0; --chip:#222c28; --good:#5cc08a; --bad:#ef7b72; --pos:#3987e5; --neg:#e66767;}
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:32px 56px;display:grid;gap:28px}
+.mono,.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2{font-family:"Archivo",system-ui,sans-serif;font-stretch:112%;margin:0;text-wrap:balance}
+h1{font-weight:800;font-size:clamp(30px,6vw,52px);line-height:1;letter-spacing:-.01em}
+h2{font-weight:600;font-size:20px}
+.eyebrow{font:500 12px/1 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header{display:grid;gap:10px}
+header p{margin:0;color:var(--ink2);max-width:68ch}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+.sec{display:grid;gap:14px}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+.sec-head p{margin:4px 0 0;color:var(--ink2);font-size:14px}
+/* leaderboard */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:820px){.board{grid-template-columns:1fr}}
+.pl{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:14px;border-top:4px solid var(--c)}
+.pl-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pl-name{font:600 18px/1.2 "Archivo",sans-serif;font-stretch:112%;display:flex;align-items:center;gap:8px}
+.rank{font:500 12px "IBM Plex Mono",monospace;color:var(--muted)}
+.big{font:500 40px/1 "IBM Plex Mono",monospace;letter-spacing:-.02em}
+.big small{font-size:14px;color:var(--muted);letter-spacing:0}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.kv div{display:grid;gap:2px}
+.kv dt{font-size:12px;color:var(--muted)}
+.kv dd{margin:0;font:500 16px "IBM Plex Mono",monospace}
+.kv dd .sub{font-size:12px;color:var(--muted);font-weight:400}
+.up{color:var(--good)} .down{color:var(--bad)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c);display:inline-block;flex:none}
+/* chart */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:500 13px "IBM Plex Sans",sans-serif;background:transparent;color:var(--ink2);border:0;padding:7px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.seg button:focus-visible{outline:2px solid var(--s1);outline-offset:-2px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:16px;height:3px;border-radius:2px;background:var(--c);display:inline-block}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--muted);font:11px "IBM Plex Mono",monospace}
+.tip{position:absolute;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.12);min-width:160px;display:grid;gap:3px}
+.tip b{font-weight:600}
+.tip .r{display:flex;justify-content:space-between;gap:14px;align-items:center}
+.tip .r span:first-child{display:inline-flex;gap:6px;align-items:center}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.heat td.h{position:relative}
+.heat td.h::before{content:"";position:absolute;inset:3px;border-radius:5px;background:var(--hc);opacity:var(--ha)}
+.heat td.h>span{position:relative}
+.heat .sm{font-size:11.5px;color:var(--muted);display:block}
+.key{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.key i{display:inline-block;width:60px;height:10px;border-radius:3px}
+.places{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.places li{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding-bottom:10px;border-bottom:1px solid var(--grid)}
+.places li:last-child{border-bottom:0;padding-bottom:0}
+.places .pn{font-weight:500}
+.places .pd,.places .pw{font-size:12px;color:var(--muted)}
+.places .ps{display:flex;gap:10px;font:500 13px "IBM Plex Mono",monospace;align-items:center;justify-content:end;flex-wrap:wrap}
+.places .ps span{display:inline-flex;gap:4px;align-items:center}
+.places .pw{grid-column:1/-1}
+/* grids */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+thead th{font:500 11.5px "IBM Plex Mono",monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.num{font-size:13.5px}
+.scroll{overflow-x:auto}
+.h2h td.self{color:var(--muted);text-align:center}
+.cellw{font-weight:600}
+/* insights */
+.ins{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media (max-width:820px){.ins{grid-template-columns:1fr}}
+.ins article{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:6px;align-content:start}
+.ins h3{margin:0;font:600 15.5px/1.35 "IBM Plex Sans",sans-serif}
+.ins p{margin:0;color:var(--ink2);font-size:14px}
+.ins .tag{font:500 11px "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0}
+summary{cursor:pointer;padding:14px 18px;font-weight:600}
+details .scroll{padding:0 12px 12px}
+.w{font-weight:600;color:var(--ink)}
+.l{color:var(--muted)}
+.rounds{color:var(--muted);font-size:11.5px;display:block}
+.pill{display:inline-block;font:500 11px "IBM Plex Mono",monospace;padding:2px 7px;border-radius:99px;background:var(--chip);color:var(--ink2)}
+.strip{display:grid;grid-template-columns:repeat(11,minmax(22px,1fr));gap:2px;min-width:260px}
+.strip span{display:flex;align-items:center;justify-content:center;height:24px;border-radius:4px;font:500 11px "IBM Plex Mono",monospace;color:var(--ink);position:relative;overflow:hidden}
+.strip span::before{content:"";position:absolute;inset:0;background:var(--sc);opacity:var(--sa)}
+.strip span b{position:relative;font-weight:500}
+.strip.hdr span{height:auto;color:var(--muted);font-size:10px}
+.rh td{vertical-align:middle}
+.rh td.pair{white-space:nowrap}
+.wl{display:flex;gap:16px;flex-wrap:wrap}
+.wl div{display:grid;gap:2px;min-width:110px}
+.wl b{font:500 22px "IBM Plex Mono",monospace}
+.wl span{font-size:12px;color:var(--muted)}
+.dist100{display:grid;gap:10px}
+.dbar{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center}
+.dbar .nm{font-size:13.5px;display:flex;gap:6px;align-items:center}
+.dbar .bar{display:flex;height:26px;border-radius:5px;overflow:hidden;gap:2px;background:var(--card)}
+.dbar .bar span{display:flex;align-items:center;justify-content:center;font:500 10.5px "IBM Plex Mono",monospace;color:#fff;min-width:0;overflow:hidden;white-space:nowrap}
+.dbar .bar span.lt{color:var(--ink)}
+.bkey{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.bkey i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+:root{--b1:#0d366b;--b2:#256abf;--b3:#6da7ec;--b4:#b7d3f6;--b5:#c9c8c2;--b6:#f0a3a2;--b7:#d93b3a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--b1:#9ec5f4;--b2:#5598e7;--b3:#2a78d6;--b4:#184f95;--b5:#55554f;--b6:#8e3a39;--b7:#e66767}}
+:root[data-theme="dark"]{--b1:#9ec5f4;--b2:#5598e7;--b3:#2a78d6;--b4:#184f95;--b5:#55554f;--b6:#8e3a39;--b7:#e66767}
+.otgrid{display:grid;gap:18px}
+.otchart{position:relative;width:100%}
+.otchart svg{display:block;width:100%;height:auto;overflow:visible}
+.otchart text{fill:var(--muted);font:11px "IBM Plex Mono",monospace}
+.otchart .ttl{fill:var(--ink);font:600 13px "IBM Plex Sans",sans-serif}
+.sub-h{margin:0;font:600 15px "IBM Plex Sans",sans-serif}
+.cal-key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);align-items:center}
+.cal-key i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Lionpack group chat · 24 Jul – 29 Oct 2026 · 98 daily maps</div>
+    <h1>Lionpack MapTap Table</h1>
+    <p>Every daily <span class="mono">maptap.gg</span> result posted in the chat, scored out of 1,000 across five rounds. Where someone posted twice for the same day, only their first post counts; the second was a forwarded score from a partner or family member.</p>
+    <p class="note">Locations come from MapTap’s daily history pages, via a public mirror, with gaps filled in from maptap.gg. World averages are MapTap’s own per-round player data.</p>
+  </header>
+
+  <section class="sec">
+    <div class="sec-head"><div><h2>Standings</h2><p>Ranked by all-time average. Rolling windows are calendar days ending 29 Oct, averaging the games played in that window.</p></div></div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section class="sec panel">
+    <div class="sec-head">
+      <div><h2 id="chartTitle">Rolling 7-day average</h2><p id="chartSub">Average of each player's scores over the previous 7 days, plotted daily.</p></div>
+      <div class="seg" role="group" aria-label="Chart view">
+        <button type="button" id="b7" aria-pressed="true">7-day</button>
+        <button type="button" id="b30" aria-pressed="false">30-day</button>
+        <button type="button" id="braw" aria-pressed="false">Daily</button>
+        <button type="button" id="bvw" aria-pressed="false">vs world</button>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="chart" id="chart"></div>
+    <p class="note">Rahul's line starts on 25 Jul, his first game.</p>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><div><h2>What stands out</h2></div></div>
+    <div class="ins" id="ins"></div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><div><h2>Geography</h2><p>Every round matched to the place MapTap asked for: 485 map rounds, 451 different places, 1,260 scores. “vs world” is points per round above MapTap’s global average for that exact round, so it adjusts for how hard each place was.</p></div></div>
+    <div class="ins" id="geoins"></div>
+  </section>
+
+  <section class="panel sec">
+    <div class="sec-head"><div><h2>By continent</h2><p>Average round score, with points above or below the world average underneath.</p></div>
+      <div class="key"><span>below world</span><i style="background:linear-gradient(90deg,var(--neg),var(--card),var(--pos))"></i><span>above world</span></div></div>
+    <div class="scroll"><table class="heat" id="conttab"></table></div>
+  </section>
+
+  <section class="panel sec">
+    <div class="sec-head"><div><h2>By region</h2><p>Sorted hardest first, by the world average. Map-round counts are for the whole group.</p></div></div>
+    <div class="scroll"><table class="heat" id="regtab"></table></div>
+  </section>
+
+  <section class="two">
+    <div class="panel sec">
+      <div><h2>Rounds that decided days</h2><p class="note" style="margin-top:4px">Biggest gaps between the three of you on a single round.</p></div>
+      <ul class="places" id="splits"></ul>
+    </div>
+    <div class="panel sec">
+      <div><h2>Hardest for the group</h2><p class="note" style="margin-top:4px">Lowest three-way average on a single round.</p></div>
+      <ul class="places" id="hardest"></ul>
+    </div>
+  </section>
+
+  <section class="panel sec" id="overtime">
+    <div class="sec-head"><div><h2>Over time</h2><p>How the season has moved week by week: where whitewashes happened, how spread out each player's week was, who won each day, and the days that split the group.</p></div></div>
+
+    <div class="sec"><h3 class="sub-h">Whitewash watch</h3>
+      <p class="note">One row per player. Each box covers that week's round margins against every opponent, from −5 (whitewashed) to +5 (whitewash). The box is the middle half, the line is the median and the whiskers show the range. ▲ marks a 5–0 dealt and ▼ a 5–0 suffered, with the count beside it when there's more than one.</p>
+      <div class="otchart" id="wwbox"></div></div>
+
+    <div class="sec"><h3 class="sub-h">Weekly score boxplots</h3>
+      <p class="note">Daily totals per week, side by side for each player. Taller boxes mean a more up-and-down week, and dots are outliers.</p>
+      <div class="legend" id="otlegend"></div>
+      <div class="otchart" id="wkbox"></div></div>
+
+    <div class="two">
+      <div class="sec"><h3 class="sub-h">Who won each day</h3>
+        <p class="note">Weeks run left to right and days top to bottom (Mon–Sun). The colour is the day's winner, and stronger colour means a bigger winning margin. Hover a cell for the scores.</p>
+        <div class="cal-key" id="calkey"></div>
+        <div class="otchart" id="cal"></div></div>
+      <div class="sec"><h3 class="sub-h">Every daily score</h3>
+        <p class="note">Each dot is one day's total. The thin line is the player's median.</p>
+        <div class="otchart" id="swarm"></div></div>
+    </div>
+
+    <div class="sec"><h3 class="sub-h">Chaos index</h3>
+      <p class="note">Gap between the best and worst regular each day, on days at least three played. Tall bars are the maps that split the group, and short bars the days everyone landed together.</p>
+      <div class="otchart" id="chaos"></div></div>
+
+    <div class="ins" id="otins"></div>
+  </section>
+
+  <section class="panel sec" id="roundsdist">
+    <div class="sec-head"><div><h2>Round scores</h2><p>Every individual round score, out of 100, pooled per player. The bar shows how each player's rounds are spread. The table gives averages and how much they vary.</p></div>
+      <div class="bkey" id="bkey"></div></div>
+    <div class="dist100" id="distbars"></div>
+    <div class="scroll"><table id="disttab"></table></div>
+    <p class="note">Variance is the square of the standard deviation (SD), so it punishes big misses hardest. “Points lost to bad rounds” is the share of all the points you've dropped below 100 that came from rounds under 70.</p>
+    <div class="ins" id="distins"></div>
+  </section>
+
+  <section class="panel sec" id="character">
+    <div class="sec-head"><div><h2>Form and character</h2><p>Elo ratings treat every day as a head-to-head against everyone who played, like chess. Everyone starts at 1500, and a win against a stronger player is worth more. Below it: how you react to a bad day, whether good days run in streaks, and the group's best-ball “dream team”.</p></div></div>
+    <div class="legend" id="elolegend"></div>
+    <div class="chart" id="elochart"></div>
+    <div class="scroll"><table id="chartab"></table></div>
+    <p class="note">A bad day is one more than one SD below your average, and a good day one more than one SD above. Day-to-day correlation near 0 means yesterday tells you nothing about today. Positive means streaky, negative means you bounce back. The dream team takes the best score of whoever played on each round.</p>
+    <div class="ins" id="charins"></div>
+  </section>
+
+  <section class="panel sec" id="rounds">
+    <div class="sec-head"><div><h2>Round by round</h2><p>Every shared day treated as a five-round match: you win a round by scoring higher on that location, and equal scores are a tie. A 5–0 whitewash means one player beat the other on every single round.</p></div></div>
+    <div class="wl" id="washboard"></div>
+    <div class="scroll"><table class="rh" id="rhtab"></table></div>
+    <p class="note">The strip shows how each pair's matches finished, from the left player's view: round margin −5 (whitewashed) through 0 (level) to +5 (whitewash). Ties within a match are why some margins are odd-looking, e.g. 3–1 with one tied round is +2. “Won the day, lost the rounds” counts days where a player had the higher total despite winning fewer rounds.</p>
+    <div class="ins" id="rhins"></div>
+  </section>
+
+  <section class="two">
+    <div class="panel sec">
+      <div><h2>Head to head</h2><p class="note" style="margin-top:4px">Row player's wins against column player, on days both played.</p></div>
+      <div class="scroll"><table class="h2h" id="h2h"></table></div>
+    </div>
+    <div class="panel sec">
+      <div><h2>Average by round</h2><p class="note" style="margin-top:4px">Each round is worth 100. Later rounds are harder for everyone.</p></div>
+      <div class="chart" id="rchart"></div>
+    </div>
+  </section>
+
+  <section class="panel sec">
+    <div><h2>More numbers</h2></div>
+    <div class="scroll"><table id="more"></table></div>
+  </section>
+
+  <section class="two">
+    <div class="panel sec">
+      <div><h2>Themed maps</h2><p class="note" style="margin-top:4px">Custom MapTap maps played on 31 Jul and 5 Aug. Not included in the daily stats.</p></div>
+      <div class="scroll"><table id="themed"></table></div>
+    </div>
+    <div class="panel sec">
+      <div><h2>Forwarded scores</h2><p class="note" style="margin-top:4px">Second posts and labelled posts, left out of every figure above.</p></div>
+      <div class="scroll"><table id="guests"></table></div>
+    </div>
+  </section>
+
+  <details>
+    <summary>Full daily log (98 days)</summary>
+    <div class="scroll"><table id="log"></table></div>
+  </details>
+</div>
+
+<script>
+const D = {"days":["2026-07-24","2026-07-25","2026-07-26","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31","2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-08","2026-08-09","2026-08-10","2026-08-11","2026-08-12","2026-08-13","2026-08-14","2026-08-15","2026-08-16","2026-08-17","2026-08-18","2026-08-19","2026-08-20","2026-08-21","2026-08-22","2026-08-23","2026-08-24","2026-08-25","2026-08-26","2026-08-27","2026-08-28","2026-08-29","2026-08-30","2026-08-31","2026-09-01","2026-09-02","2026-09-03","2026-09-04","2026-09-05","2026-09-06","2026-09-07","2026-09-08","2026-09-09","2026-09-10","2026-09-11","2026-09-12","2026-09-13","2026-09-14","2026-09-15","2026-09-16","2026-09-17","2026-09-18","2026-09-19","2026-09-20","2026-09-21","2026-09-22","2026-09-23","2026-09-24","2026-09-25","2026-09-26","2026-09-27","2026-09-28","2026-09-29","2026-09-30","2026-10-01","2026-10-02","2026-10-03","2026-10-04","2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-09","2026-10-10","2026-10-11","2026-10-12","2026-10-13","2026-10-14","2026-10-15","2026-10-16","2026-10-17","2026-10-18","2026-10-19","2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-24","2026-10-25","2026-10-26","2026-10-27","2026-10-28","2026-10-29"],"players":{"Ravi":{"raw":[902,841,961,979,873,920,970,924,960,951,909,968,869,980,903,913,954,907,971,957,906,690,973,957,817,909,792,961,921,935,930,924,952,908,914,959,910,954,914,952,952,969,915,886,908,671,933,947,897,915,928,905,914,913,951,988,935,948,917,908,943,910,848,917,948,918,900,876,898,898,966,964,948,863,883,884,971,937,910,813,970,948,972,868,933,865,945,875,889,871,937,973,null,926,901,965,920,925],"r7":[902.0,871.5,901.3,920.8,911.2,912.7,920.9,924.0,941.0,939.6,929.6,943.1,935.9,937.3,934.3,927.6,928.0,927.7,928.1,940.7,930.1,899.7,908.3,908.7,895.9,887.0,863.4,871.3,904.3,898.9,895.0,910.3,916.4,933.0,926.3,931.7,928.1,931.6,930.1,930.1,936.4,944.3,938.0,934.6,928.0,893.3,890.6,889.9,879.6,879.6,885.6,885.1,919.9,917.0,917.6,930.6,933.4,936.3,938.0,937.1,941.4,935.6,915.6,913.0,913.0,913.1,912.0,902.4,900.7,907.9,914.9,917.1,921.4,916.1,917.1,915.1,925.6,921.4,913.7,894.4,909.7,919.0,931.6,916.9,916.3,909.9,928.7,915.1,906.7,892.3,902.1,907.9,915.0,911.8,916.2,928.8,937.0,935.0],"r30":[902.0,871.5,901.3,920.8,911.2,912.7,920.9,921.2,925.6,928.1,926.4,929.8,925.2,929.1,927.3,926.4,928.1,926.9,929.2,930.6,929.4,918.5,920.9,922.4,918.2,917.8,913.2,914.9,915.1,915.8,916.7,919.5,919.2,916.8,918.2,919.5,917.5,918.5,916.9,917.0,918.4,918.4,920.0,916.8,917.0,908.9,908.2,909.6,907.1,905.7,906.4,913.6,911.6,910.2,914.6,917.3,922.0,921.6,921.5,920.6,921.0,920.5,917.1,917.4,918.5,917.1,916.8,914.2,913.7,911.9,912.3,912.2,913.3,912.5,911.7,918.8,920.0,919.7,920.1,916.7,918.1,919.6,921.5,920.0,919.4,915.3,915.6,913.2,912.3,911.0,910.8,912.9,915.2,915.5,913.9,915.5,916.2,917.9],"rounds":[96.5,95.4,93.9,90.8,88.3]},"Kevan Bhate":{"raw":[792,873,860,913,823,891,945,732,831,916,793,823,796,942,916,886,923,910,820,930,928,934,967,977,885,944,778,812,841,886,829,826,956,904,881,927,865,938,874,817,905,966,688,816,946,795,948,873,879,894,899,856,926,914,807,889,928,876,873,924,933,926,806,887,912,null,888,849,908,847,953,884,650,null,862,null,null,878,926,829,null,811,null,701,912,947,null,null,891,907,904,null,null,null,null,null,883,null],"r7":[792.0,832.5,841.7,859.5,852.2,858.7,871.0,862.4,856.4,864.4,847.3,847.3,833.7,833.3,859.6,867.4,868.4,885.1,884.7,903.9,901.9,904.4,916.0,923.7,920.1,937.9,916.1,899.6,886.3,874.7,853.6,845.1,846.9,864.9,874.7,887.0,884.0,899.6,906.4,886.6,886.7,898.9,864.7,857.7,858.9,847.6,866.3,861.7,849.3,878.7,890.6,877.7,896.4,891.6,882.1,883.6,888.4,885.1,887.6,887.3,890.0,907.0,895.1,889.3,894.4,898.0,892.0,878.0,875.0,881.8,892.8,888.2,854.1,848.5,850.7,839.2,837.2,818.5,829.0,873.8,873.8,861.0,861.0,829.0,835.8,840.0,842.8,842.8,862.8,871.6,912.2,912.2,900.7,900.7,900.7,905.5,893.5,883.0],"r30":[792.0,832.5,841.7,859.5,852.2,858.7,871.0,853.6,851.1,857.6,851.7,849.3,845.2,852.1,856.4,858.2,862.1,864.7,862.4,865.8,868.7,871.7,875.8,880.0,880.2,882.7,878.8,876.4,875.2,875.6,876.8,875.2,878.4,878.1,880.1,881.3,878.6,885.5,886.9,883.6,887.3,892.1,888.5,884.3,885.3,882.3,883.1,881.9,883.8,882.6,881.7,879.1,877.7,875.6,873.0,871.2,876.2,878.3,879.4,880.6,884.1,887.4,882.4,881.9,882.9,881.4,882.2,879.1,880.3,881.3,883.0,880.1,878.8,881.1,878.1,881.1,878.6,878.8,880.6,878.1,877.2,875.4,873.3,864.5,868.8,871.2,868.8,868.5,869.3,868.5,867.2,864.4,867.3,866.3,863.7,863.7,863.4,864.3],"rounds":[94.1,92.7,90.7,87.3,82.0]},"Rahul Shah":{"raw":[null,777,820,951,903,852,843,734,888,null,732,840,690,928,900,897,null,912,923,null,null,696,981,885,921,855,null,801,null,null,null,809,954,870,772,null,851,893,911,601,866,899,689,829,821,769,953,833,912,885,null,null,960,null,812,990,921,948,null,845,null,null,874,861,907,968,null,833,851,null,929,925,771,869,894,879,832,940,null,942,909,null,null,891,899,901,923,null,875,877,null,null,null,null,null,913,911,919],"r7":[null,777.0,798.5,849.3,862.8,860.6,857.7,840.0,855.9,861.8,825.3,814.8,787.8,802.0,829.7,831.2,831.2,861.2,875.0,912.0,908.0,857.0,878.0,879.4,881.2,867.6,867.6,856.5,888.6,865.5,859.0,821.7,854.7,858.5,851.2,851.2,851.2,858.2,875.2,816.3,815.7,836.8,815.7,812.6,802.3,782.0,832.3,827.6,829.4,857.4,862.2,870.4,908.6,897.5,892.2,911.8,920.8,926.2,926.2,903.2,903.2,926.0,897.0,882.0,871.8,891.0,902.5,888.6,882.3,884.0,897.6,901.2,861.8,863.0,873.2,877.8,871.3,872.9,864.2,892.7,899.3,900.4,905.8,920.5,910.2,908.4,904.6,903.5,897.8,894.3,895.0,894.0,891.7,876.0,876.0,895.0,912.0,914.3],"r30":[null,777.0,798.5,849.3,862.8,860.6,857.7,840.0,846.0,846.0,833.3,834.0,820.9,829.8,835.2,839.6,839.6,844.5,849.4,849.4,849.4,840.4,848.2,850.1,853.6,853.7,853.7,851.3,851.3,851.3,851.3,852.8,858.9,855.2,849.2,849.1,849.5,857.0,858.1,846.5,852.5,855.2,855.2,850.7,847.1,841.3,846.1,842.7,842.2,844.0,844.0,850.4,849.5,847.9,843.0,849.1,852.2,858.6,858.6,858.0,858.0,860.2,856.7,856.3,862.2,866.6,867.3,864.7,862.0,873.9,876.8,878.0,881.7,883.5,886.8,891.8,886.3,891.2,890.2,892.9,893.6,893.6,890.5,890.5,894.5,890.4,890.5,887.8,887.2,888.6,888.6,888.6,889.3,890.8,889.9,887.0,888.2,892.5],"rounds":[94.8,93.3,89.3,85.5,81.5]}}};
+const S = {"days":["2026-07-24","2026-07-25","2026-07-26","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31","2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-08","2026-08-09","2026-08-10","2026-08-11","2026-08-12","2026-08-13","2026-08-14","2026-08-15","2026-08-16","2026-08-17","2026-08-18","2026-08-19","2026-08-20","2026-08-21","2026-08-22","2026-08-23","2026-08-24","2026-08-25","2026-08-26","2026-08-27","2026-08-28","2026-08-29","2026-08-30","2026-08-31","2026-09-01","2026-09-02","2026-09-03","2026-09-04","2026-09-05","2026-09-06","2026-09-07","2026-09-08","2026-09-09","2026-09-10","2026-09-11","2026-09-12","2026-09-13","2026-09-14","2026-09-15","2026-09-16","2026-09-17","2026-09-18","2026-09-19","2026-09-20","2026-09-21","2026-09-22","2026-09-23","2026-09-24","2026-09-25","2026-09-26","2026-09-27","2026-09-28","2026-09-29","2026-09-30","2026-10-01","2026-10-02","2026-10-03","2026-10-04","2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-09","2026-10-10","2026-10-11","2026-10-12","2026-10-13","2026-10-14","2026-10-15","2026-10-16","2026-10-17","2026-10-18","2026-10-19","2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-24","2026-10-25","2026-10-26","2026-10-27","2026-10-28","2026-10-29"],"players":{"Ravi":{"n":97,"part":99,"mean":917.2,"median":920,"sd":51.8,"best":[988,"2026-09-17"],"worst":[671,"2026-09-07"],"r7":935.0,"r30":917.9,"n900":75,"p900":77,"n950":28,"round_avg":[96.5,95.4,93.9,90.8,88.3],"hundreds":67,"per100":13.8,"sub50":4,"roundmean":93,"streak_best":92,"streak_cur":5,"wins":60,"beatpct":72,"rel":26.1,"months":{"07":921.2,"08":918.3,"09":913.7,"10":918.6},"lastplace":10,"first":"2026-07-24","last":"2026-10-29","first7":920.9,"last7":935.3,"series":{"2026-07-24":902,"2026-07-25":841,"2026-07-26":961,"2026-07-27":979,"2026-07-28":873,"2026-07-29":920,"2026-07-30":970,"2026-07-31":924,"2026-08-01":960,"2026-08-02":951,"2026-08-03":909,"2026-08-04":968,"2026-08-05":869,"2026-08-06":980,"2026-08-07":903,"2026-08-08":913,"2026-08-09":954,"2026-08-10":907,"2026-08-11":971,"2026-08-12":957,"2026-08-13":906,"2026-08-14":690,"2026-08-15":973,"2026-08-16":957,"2026-08-17":817,"2026-08-18":909,"2026-08-19":792,"2026-08-20":961,"2026-08-21":921,"2026-08-22":935,"2026-08-23":930,"2026-08-24":924,"2026-08-25":952,"2026-08-26":908,"2026-08-27":914,"2026-08-28":959,"2026-08-29":910,"2026-08-30":954,"2026-08-31":914,"2026-09-01":952,"2026-09-02":952,"2026-09-03":969,"2026-09-04":915,"2026-09-05":886,"2026-09-06":908,"2026-09-07":671,"2026-09-08":933,"2026-09-09":947,"2026-09-10":897,"2026-09-11":915,"2026-09-12":928,"2026-09-13":905,"2026-09-14":914,"2026-09-15":913,"2026-09-16":951,"2026-09-17":988,"2026-09-18":935,"2026-09-19":948,"2026-09-20":917,"2026-09-21":908,"2026-09-22":943,"2026-09-23":910,"2026-09-24":848,"2026-09-25":917,"2026-09-26":948,"2026-09-27":918,"2026-09-28":900,"2026-09-29":876,"2026-09-30":898,"2026-10-01":898,"2026-10-02":966,"2026-10-03":964,"2026-10-04":948,"2026-10-05":863,"2026-10-06":883,"2026-10-07":884,"2026-10-08":971,"2026-10-09":937,"2026-10-10":910,"2026-10-11":813,"2026-10-12":970,"2026-10-13":948,"2026-10-14":972,"2026-10-15":868,"2026-10-16":933,"2026-10-17":865,"2026-10-18":945,"2026-10-19":875,"2026-10-20":889,"2026-10-21":871,"2026-10-22":937,"2026-10-23":973,"2026-10-25":926,"2026-10-26":901,"2026-10-27":965,"2026-10-28":920,"2026-10-29":925},"r7s":{"2026-07-24":902.0,"2026-07-25":871.5,"2026-07-26":901.3,"2026-07-27":920.8,"2026-07-28":911.2,"2026-07-29":912.7,"2026-07-30":920.9,"2026-07-31":924.0,"2026-08-01":941.0,"2026-08-02":939.6,"2026-08-03":929.6,"2026-08-04":943.1,"2026-08-05":935.9,"2026-08-06":937.3,"2026-08-07":934.3,"2026-08-08":927.6,"2026-08-09":928.0,"2026-08-10":927.7,"2026-08-11":928.1,"2026-08-12":940.7,"2026-08-13":930.1,"2026-08-14":899.7,"2026-08-15":908.3,"2026-08-16":908.7,"2026-08-17":895.9,"2026-08-18":887.0,"2026-08-19":863.4,"2026-08-20":871.3,"2026-08-21":904.3,"2026-08-22":898.9,"2026-08-23":895.0,"2026-08-24":910.3,"2026-08-25":916.4,"2026-08-26":933.0,"2026-08-27":926.3,"2026-08-28":931.7,"2026-08-29":928.1,"2026-08-30":931.6,"2026-08-31":930.1,"2026-09-01":930.1,"2026-09-02":936.4,"2026-09-03":944.3,"2026-09-04":938.0,"2026-09-05":934.6,"2026-09-06":928.0,"2026-09-07":893.3,"2026-09-08":890.6,"2026-09-09":889.9,"2026-09-10":879.6,"2026-09-11":879.6,"2026-09-12":885.6,"2026-09-13":885.1,"2026-09-14":919.9,"2026-09-15":917.0,"2026-09-16":917.6,"2026-09-17":930.6,"2026-09-18":933.4,"2026-09-19":936.3,"2026-09-20":938.0,"2026-09-21":937.1,"2026-09-22":941.4,"2026-09-23":935.6,"2026-09-24":915.6,"2026-09-25":913.0,"2026-09-26":913.0,"2026-09-27":913.1,"2026-09-28":912.0,"2026-09-29":902.4,"2026-09-30":900.7,"2026-10-01":907.9,"2026-10-02":914.9,"2026-10-03":917.1,"2026-10-04":921.4,"2026-10-05":916.1,"2026-10-06":917.1,"2026-10-07":915.1,"2026-10-08":925.6,"2026-10-09":921.4,"2026-10-10":913.7,"2026-10-11":894.4,"2026-10-12":909.7,"2026-10-13":919.0,"2026-10-14":931.6,"2026-10-15":916.9,"2026-10-16":916.3,"2026-10-17":909.9,"2026-10-18":928.7,"2026-10-19":915.1,"2026-10-20":906.7,"2026-10-21":892.3,"2026-10-22":902.1,"2026-10-23":907.9,"2026-10-24":915.0,"2026-10-25":911.8,"2026-10-26":916.2,"2026-10-27":928.8,"2026-10-28":937.0,"2026-10-29":935.0},"r30s":{"2026-07-24":902.0,"2026-07-25":871.5,"2026-07-26":901.3,"2026-07-27":920.8,"2026-07-28":911.2,"2026-07-29":912.7,"2026-07-30":920.9,"2026-07-31":921.2,"2026-08-01":925.6,"2026-08-02":928.1,"2026-08-03":926.4,"2026-08-04":929.8,"2026-08-05":925.2,"2026-08-06":929.1,"2026-08-07":927.3,"2026-08-08":926.4,"2026-08-09":928.1,"2026-08-10":926.9,"2026-08-11":929.2,"2026-08-12":930.6,"2026-08-13":929.4,"2026-08-14":918.5,"2026-08-15":920.9,"2026-08-16":922.4,"2026-08-17":918.2,"2026-08-18":917.8,"2026-08-19":913.2,"2026-08-20":914.9,"2026-08-21":915.1,"2026-08-22":915.8,"2026-08-23":916.7,"2026-08-24":919.5,"2026-08-25":919.2,"2026-08-26":916.8,"2026-08-27":918.2,"2026-08-28":919.5,"2026-08-29":917.5,"2026-08-30":918.5,"2026-08-31":916.9,"2026-09-01":917.0,"2026-09-02":918.4,"2026-09-03":918.4,"2026-09-04":920.0,"2026-09-05":916.8,"2026-09-06":917.0,"2026-09-07":908.9,"2026-09-08":908.2,"2026-09-09":909.6,"2026-09-10":907.1,"2026-09-11":905.7,"2026-09-12":906.4,"2026-09-13":913.6,"2026-09-14":911.6,"2026-09-15":910.2,"2026-09-16":914.6,"2026-09-17":917.3,"2026-09-18":922.0,"2026-09-19":921.6,"2026-09-20":921.5,"2026-09-21":920.6,"2026-09-22":921.0,"2026-09-23":920.5,"2026-09-24":917.1,"2026-09-25":917.4,"2026-09-26":918.5,"2026-09-27":917.1,"2026-09-28":916.8,"2026-09-29":914.2,"2026-09-30":913.7,"2026-10-01":911.9,"2026-10-02":912.3,"2026-10-03":912.2,"2026-10-04":913.3,"2026-10-05":912.5,"2026-10-06":911.7,"2026-10-07":918.8,"2026-10-08":920.0,"2026-10-09":919.7,"2026-10-10":920.1,"2026-10-11":916.7,"2026-10-12":918.1,"2026-10-13":919.6,"2026-10-14":921.5,"2026-10-15":920.0,"2026-10-16":919.4,"2026-10-17":915.3,"2026-10-18":915.6,"2026-10-19":913.2,"2026-10-20":912.3,"2026-10-21":911.0,"2026-10-22":910.8,"2026-10-23":912.9,"2026-10-24":915.2,"2026-10-25":915.5,"2026-10-26":913.9,"2026-10-27":915.5,"2026-10-28":916.2,"2026-10-29":917.9}},"Kevan Bhate":{"n":84,"part":86,"mean":876.0,"median":886.5,"sd":63.8,"best":[977,"2026-08-16"],"worst":[650,"2026-10-04"],"r7":883.0,"r30":864.3,"n900":35,"p900":42,"n950":5,"round_avg":[94.1,92.7,90.7,87.3,82.0],"hundreds":19,"per100":4.5,"sub50":3,"roundmean":89.3,"streak_best":65,"streak_cur":0,"wins":17,"beatpct":39,"rel":-12.1,"months":{"07":853.6,"08":885.1,"09":880.3,"10":861.6},"lastplace":22,"first":"2026-07-24","last":"2026-10-28","first7":871,"last7":877.9,"series":{"2026-07-24":792,"2026-07-25":873,"2026-07-26":860,"2026-07-27":913,"2026-07-28":823,"2026-07-29":891,"2026-07-30":945,"2026-07-31":732,"2026-08-01":831,"2026-08-02":916,"2026-08-03":793,"2026-08-04":823,"2026-08-05":796,"2026-08-06":942,"2026-08-07":916,"2026-08-08":886,"2026-08-09":923,"2026-08-10":910,"2026-08-11":820,"2026-08-12":930,"2026-08-13":928,"2026-08-14":934,"2026-08-15":967,"2026-08-16":977,"2026-08-17":885,"2026-08-18":944,"2026-08-19":778,"2026-08-20":812,"2026-08-21":841,"2026-08-22":886,"2026-08-23":829,"2026-08-24":826,"2026-08-25":956,"2026-08-26":904,"2026-08-27":881,"2026-08-28":927,"2026-08-29":865,"2026-08-30":938,"2026-08-31":874,"2026-09-01":817,"2026-09-02":905,"2026-09-03":966,"2026-09-04":688,"2026-09-05":816,"2026-09-06":946,"2026-09-07":795,"2026-09-08":948,"2026-09-09":873,"2026-09-10":879,"2026-09-11":894,"2026-09-12":899,"2026-09-13":856,"2026-09-14":926,"2026-09-15":914,"2026-09-16":807,"2026-09-17":889,"2026-09-18":928,"2026-09-19":876,"2026-09-20":873,"2026-09-21":924,"2026-09-22":933,"2026-09-23":926,"2026-09-24":806,"2026-09-25":887,"2026-09-26":912,"2026-09-28":888,"2026-09-29":849,"2026-09-30":908,"2026-10-01":847,"2026-10-02":953,"2026-10-03":884,"2026-10-04":650,"2026-10-06":862,"2026-10-09":878,"2026-10-10":926,"2026-10-11":829,"2026-10-13":811,"2026-10-15":701,"2026-10-16":912,"2026-10-17":947,"2026-10-20":891,"2026-10-21":907,"2026-10-22":904,"2026-10-28":883},"r7s":{"2026-07-24":792.0,"2026-07-25":832.5,"2026-07-26":841.7,"2026-07-27":859.5,"2026-07-28":852.2,"2026-07-29":858.7,"2026-07-30":871.0,"2026-07-31":862.4,"2026-08-01":856.4,"2026-08-02":864.4,"2026-08-03":847.3,"2026-08-04":847.3,"2026-08-05":833.7,"2026-08-06":833.3,"2026-08-07":859.6,"2026-08-08":867.4,"2026-08-09":868.4,"2026-08-10":885.1,"2026-08-11":884.7,"2026-08-12":903.9,"2026-08-13":901.9,"2026-08-14":904.4,"2026-08-15":916.0,"2026-08-16":923.7,"2026-08-17":920.1,"2026-08-18":937.9,"2026-08-19":916.1,"2026-08-20":899.6,"2026-08-21":886.3,"2026-08-22":874.7,"2026-08-23":853.6,"2026-08-24":845.1,"2026-08-25":846.9,"2026-08-26":864.9,"2026-08-27":874.7,"2026-08-28":887.0,"2026-08-29":884.0,"2026-08-30":899.6,"2026-08-31":906.4,"2026-09-01":886.6,"2026-09-02":886.7,"2026-09-03":898.9,"2026-09-04":864.7,"2026-09-05":857.7,"2026-09-06":858.9,"2026-09-07":847.6,"2026-09-08":866.3,"2026-09-09":861.7,"2026-09-10":849.3,"2026-09-11":878.7,"2026-09-12":890.6,"2026-09-13":877.7,"2026-09-14":896.4,"2026-09-15":891.6,"2026-09-16":882.1,"2026-09-17":883.6,"2026-09-18":888.4,"2026-09-19":885.1,"2026-09-20":887.6,"2026-09-21":887.3,"2026-09-22":890.0,"2026-09-23":907.0,"2026-09-24":895.1,"2026-09-25":889.3,"2026-09-26":894.4,"2026-09-27":898.0,"2026-09-28":892.0,"2026-09-29":878.0,"2026-09-30":875.0,"2026-10-01":881.8,"2026-10-02":892.8,"2026-10-03":888.2,"2026-10-04":854.1,"2026-10-05":848.5,"2026-10-06":850.7,"2026-10-07":839.2,"2026-10-08":837.2,"2026-10-09":818.5,"2026-10-10":829.0,"2026-10-11":873.8,"2026-10-12":873.8,"2026-10-13":861.0,"2026-10-14":861.0,"2026-10-15":829.0,"2026-10-16":835.8,"2026-10-17":840.0,"2026-10-18":842.8,"2026-10-19":842.8,"2026-10-20":862.8,"2026-10-21":871.6,"2026-10-22":912.2,"2026-10-23":912.2,"2026-10-24":900.7,"2026-10-25":900.7,"2026-10-26":900.7,"2026-10-27":905.5,"2026-10-28":893.5,"2026-10-29":883.0},"r30s":{"2026-07-24":792.0,"2026-07-25":832.5,"2026-07-26":841.7,"2026-07-27":859.5,"2026-07-28":852.2,"2026-07-29":858.7,"2026-07-30":871.0,"2026-07-31":853.6,"2026-08-01":851.1,"2026-08-02":857.6,"2026-08-03":851.7,"2026-08-04":849.3,"2026-08-05":845.2,"2026-08-06":852.1,"2026-08-07":856.4,"2026-08-08":858.2,"2026-08-09":862.1,"2026-08-10":864.7,"2026-08-11":862.4,"2026-08-12":865.8,"2026-08-13":868.7,"2026-08-14":871.7,"2026-08-15":875.8,"2026-08-16":880.0,"2026-08-17":880.2,"2026-08-18":882.7,"2026-08-19":878.8,"2026-08-20":876.4,"2026-08-21":875.2,"2026-08-22":875.6,"2026-08-23":876.8,"2026-08-24":875.2,"2026-08-25":878.4,"2026-08-26":878.1,"2026-08-27":880.1,"2026-08-28":881.3,"2026-08-29":878.6,"2026-08-30":885.5,"2026-08-31":886.9,"2026-09-01":883.6,"2026-09-02":887.3,"2026-09-03":892.1,"2026-09-04":888.5,"2026-09-05":884.3,"2026-09-06":885.3,"2026-09-07":882.3,"2026-09-08":883.1,"2026-09-09":881.9,"2026-09-10":883.8,"2026-09-11":882.6,"2026-09-12":881.7,"2026-09-13":879.1,"2026-09-14":877.7,"2026-09-15":875.6,"2026-09-16":873.0,"2026-09-17":871.2,"2026-09-18":876.2,"2026-09-19":878.3,"2026-09-20":879.4,"2026-09-21":880.6,"2026-09-22":884.1,"2026-09-23":887.4,"2026-09-24":882.4,"2026-09-25":881.9,"2026-09-26":882.9,"2026-09-27":881.4,"2026-09-28":882.2,"2026-09-29":879.1,"2026-09-30":880.3,"2026-10-01":881.3,"2026-10-02":883.0,"2026-10-03":880.1,"2026-10-04":878.8,"2026-10-05":881.1,"2026-10-06":878.1,"2026-10-07":881.1,"2026-10-08":878.6,"2026-10-09":878.8,"2026-10-10":880.6,"2026-10-11":878.1,"2026-10-12":877.2,"2026-10-13":875.4,"2026-10-14":873.3,"2026-10-15":864.5,"2026-10-16":868.8,"2026-10-17":871.2,"2026-10-18":868.8,"2026-10-19":868.5,"2026-10-20":869.3,"2026-10-21":868.5,"2026-10-22":867.2,"2026-10-23":864.4,"2026-10-24":867.3,"2026-10-25":866.3,"2026-10-26":863.7,"2026-10-27":863.7,"2026-10-28":863.4,"2026-10-29":864.3}},"Rahul Shah":{"n":71,"part":72,"mean":867.8,"median":885,"sd":74.9,"best":[990,"2026-09-17"],"worst":[601,"2026-09-01"],"r7":914.3,"r30":892.5,"n900":28,"p900":39,"n950":7,"round_avg":[94.8,93.3,89.3,85.5,81.5],"hundreds":46,"per100":13.0,"sub50":6,"roundmean":88.9,"streak_best":14,"streak_cur":3,"wins":16,"beatpct":35,"rel":-19.5,"months":{"07":840,"08":859.5,"09":862.0,"10":894.7},"lastplace":31,"first":"2026-07-25","last":"2026-10-29","first7":840,"last7":902.7,"series":{"2026-07-25":777,"2026-07-26":820,"2026-07-27":951,"2026-07-28":903,"2026-07-29":852,"2026-07-30":843,"2026-07-31":734,"2026-08-01":888,"2026-08-03":732,"2026-08-04":840,"2026-08-05":690,"2026-08-06":928,"2026-08-07":900,"2026-08-08":897,"2026-08-10":912,"2026-08-11":923,"2026-08-14":696,"2026-08-15":981,"2026-08-16":885,"2026-08-17":921,"2026-08-18":855,"2026-08-20":801,"2026-08-24":809,"2026-08-25":954,"2026-08-26":870,"2026-08-27":772,"2026-08-29":851,"2026-08-30":893,"2026-08-31":911,"2026-09-01":601,"2026-09-02":866,"2026-09-03":899,"2026-09-04":689,"2026-09-05":829,"2026-09-06":821,"2026-09-07":769,"2026-09-08":953,"2026-09-09":833,"2026-09-10":912,"2026-09-11":885,"2026-09-14":960,"2026-09-16":812,"2026-09-17":990,"2026-09-18":921,"2026-09-19":948,"2026-09-21":845,"2026-09-24":874,"2026-09-25":861,"2026-09-26":907,"2026-09-27":968,"2026-09-29":833,"2026-09-30":851,"2026-10-02":929,"2026-10-03":925,"2026-10-04":771,"2026-10-05":869,"2026-10-06":894,"2026-10-07":879,"2026-10-08":832,"2026-10-09":940,"2026-10-11":942,"2026-10-12":909,"2026-10-15":891,"2026-10-16":899,"2026-10-17":901,"2026-10-18":923,"2026-10-20":875,"2026-10-21":877,"2026-10-27":913,"2026-10-28":911,"2026-10-29":919},"r7s":{"2026-07-24":null,"2026-07-25":777.0,"2026-07-26":798.5,"2026-07-27":849.3,"2026-07-28":862.8,"2026-07-29":860.6,"2026-07-30":857.7,"2026-07-31":840.0,"2026-08-01":855.9,"2026-08-02":861.8,"2026-08-03":825.3,"2026-08-04":814.8,"2026-08-05":787.8,"2026-08-06":802.0,"2026-08-07":829.7,"2026-08-08":831.2,"2026-08-09":831.2,"2026-08-10":861.2,"2026-08-11":875.0,"2026-08-12":912.0,"2026-08-13":908.0,"2026-08-14":857.0,"2026-08-15":878.0,"2026-08-16":879.4,"2026-08-17":881.2,"2026-08-18":867.6,"2026-08-19":867.6,"2026-08-20":856.5,"2026-08-21":888.6,"2026-08-22":865.5,"2026-08-23":859.0,"2026-08-24":821.7,"2026-08-25":854.7,"2026-08-26":858.5,"2026-08-27":851.2,"2026-08-28":851.2,"2026-08-29":851.2,"2026-08-30":858.2,"2026-08-31":875.2,"2026-09-01":816.3,"2026-09-02":815.7,"2026-09-03":836.8,"2026-09-04":815.7,"2026-09-05":812.6,"2026-09-06":802.3,"2026-09-07":782.0,"2026-09-08":832.3,"2026-09-09":827.6,"2026-09-10":829.4,"2026-09-11":857.4,"2026-09-12":862.2,"2026-09-13":870.4,"2026-09-14":908.6,"2026-09-15":897.5,"2026-09-16":892.2,"2026-09-17":911.8,"2026-09-18":920.8,"2026-09-19":926.2,"2026-09-20":926.2,"2026-09-21":903.2,"2026-09-22":903.2,"2026-09-23":926.0,"2026-09-24":897.0,"2026-09-25":882.0,"2026-09-26":871.8,"2026-09-27":891.0,"2026-09-28":902.5,"2026-09-29":888.6,"2026-09-30":882.3,"2026-10-01":884.0,"2026-10-02":897.6,"2026-10-03":901.2,"2026-10-04":861.8,"2026-10-05":863.0,"2026-10-06":873.2,"2026-10-07":877.8,"2026-10-08":871.3,"2026-10-09":872.9,"2026-10-10":864.2,"2026-10-11":892.7,"2026-10-12":899.3,"2026-10-13":900.4,"2026-10-14":905.8,"2026-10-15":920.5,"2026-10-16":910.2,"2026-10-17":908.4,"2026-10-18":904.6,"2026-10-19":903.5,"2026-10-20":897.8,"2026-10-21":894.3,"2026-10-22":895.0,"2026-10-23":894.0,"2026-10-24":891.7,"2026-10-25":876.0,"2026-10-26":876.0,"2026-10-27":895.0,"2026-10-28":912.0,"2026-10-29":914.3},"r30s":{"2026-07-24":null,"2026-07-25":777.0,"2026-07-26":798.5,"2026-07-27":849.3,"2026-07-28":862.8,"2026-07-29":860.6,"2026-07-30":857.7,"2026-07-31":840.0,"2026-08-01":846.0,"2026-08-02":846.0,"2026-08-03":833.3,"2026-08-04":834.0,"2026-08-05":820.9,"2026-08-06":829.8,"2026-08-07":835.2,"2026-08-08":839.6,"2026-08-09":839.6,"2026-08-10":844.5,"2026-08-11":849.4,"2026-08-12":849.4,"2026-08-13":849.4,"2026-08-14":840.4,"2026-08-15":848.2,"2026-08-16":850.1,"2026-08-17":853.6,"2026-08-18":853.7,"2026-08-19":853.7,"2026-08-20":851.3,"2026-08-21":851.3,"2026-08-22":851.3,"2026-08-23":851.3,"2026-08-24":852.8,"2026-08-25":858.9,"2026-08-26":855.2,"2026-08-27":849.2,"2026-08-28":849.1,"2026-08-29":849.5,"2026-08-30":857.0,"2026-08-31":858.1,"2026-09-01":846.5,"2026-09-02":852.5,"2026-09-03":855.2,"2026-09-04":855.2,"2026-09-05":850.7,"2026-09-06":847.1,"2026-09-07":841.3,"2026-09-08":846.1,"2026-09-09":842.7,"2026-09-10":842.2,"2026-09-11":844.0,"2026-09-12":844.0,"2026-09-13":850.4,"2026-09-14":849.5,"2026-09-15":847.9,"2026-09-16":843.0,"2026-09-17":849.1,"2026-09-18":852.2,"2026-09-19":858.6,"2026-09-20":858.6,"2026-09-21":858.0,"2026-09-22":858.0,"2026-09-23":860.2,"2026-09-24":856.7,"2026-09-25":856.3,"2026-09-26":862.2,"2026-09-27":866.6,"2026-09-28":867.3,"2026-09-29":864.7,"2026-09-30":862.0,"2026-10-01":873.9,"2026-10-02":876.8,"2026-10-03":878.0,"2026-10-04":881.7,"2026-10-05":883.5,"2026-10-06":886.8,"2026-10-07":891.8,"2026-10-08":886.3,"2026-10-09":891.2,"2026-10-10":890.2,"2026-10-11":892.9,"2026-10-12":893.6,"2026-10-13":893.6,"2026-10-14":890.5,"2026-10-15":890.5,"2026-10-16":894.5,"2026-10-17":890.4,"2026-10-18":890.5,"2026-10-19":887.8,"2026-10-20":887.2,"2026-10-21":888.6,"2026-10-22":888.6,"2026-10-23":888.6,"2026-10-24":889.3,"2026-10-25":890.8,"2026-10-26":889.9,"2026-10-27":887.0,"2026-10-28":888.2,"2026-10-29":892.5}}},"guests":{"Rags":[["2026-07-24",930,"Ravi"]],"Bel":[["2026-08-01",736,"Ravi"],["2026-09-06",955,"Ravi"]],"Emma":[["2026-08-13",939,"Rahul Shah"],["2026-08-31",942,"Rahul Shah"],["2026-09-07",802,"Rahul Shah"],["2026-09-09",947,"Rahul Shah"],["2026-09-24",916,"Rahul Shah"]],"Ammumma":[["2026-09-22",950,"Ravi"],["2026-09-25",937,"Ravi"]]},"dropped":[["2026-07-24","Ravi",930,"Rags"],["2026-08-01","Ravi",736,"Bel"],["2026-08-31","Rahul Shah",942,"Emma"],["2026-09-06","Ravi",955,"Bel"],["2026-09-07","Rahul Shah",802,"Emma"],["2026-09-09","Rahul Shah",947,"Emma"],["2026-09-22","Ravi",950,"Ammumma"],["2026-09-24","Rahul Shah",916,"Emma"],["2026-09-25","Ravi",937,"Ammumma"]],"reg":["Ravi","Kevan Bhate","Rahul Shah"],"occ":[],"h2h":{"Ravi|Kevan Bhate":[62,0,84],"Ravi|Rahul Shah":[50,1,71],"Kevan Bhate|Ravi":[22,0,84],"Kevan Bhate|Rahul Shah":[36,0,63],"Rahul Shah|Ravi":[20,1,71],"Rahul Shah|Kevan Bhate":[27,0,63]},"first":{"Ravi":80,"Kevan Bhate":7,"Rahul Shah":5},"lead":{"Ravi":86,"Kevan Bhate":10,"Rahul Shah":2},"full":63};
+const LOG = {"2026-07-24":{"Ravi":[902,[94,98,97,79,93]],"Kevan Bhate":[792,[80,98,88,95,51]]},"2026-07-25":{"Ravi":[841,[99,96,89,78,78]],"Kevan Bhate":[873,[97,95,81,87,86]],"Rahul Shah":[777,[95,87,89,59,80]]},"2026-07-26":{"Ravi":[961,[99,97,99,98,91]],"Kevan Bhate":[860,[92,99,99,96,61]],"Rahul Shah":[820,[79,95,98,99,51]]},"2026-07-27":{"Ravi":[979,[97,100,97,96,100]],"Kevan Bhate":[913,[97,96,99,75,99]],"Rahul Shah":[951,[96,90,99,91,98]]},"2026-07-28":{"Ravi":[873,[96,98,80,80,93]],"Kevan Bhate":[823,[98,98,69,77,86]],"Rahul Shah":[903,[98,97,75,87,99]]},"2026-07-29":{"Ravi":[920,[80,97,100,82,99]],"Kevan Bhate":[891,[80,97,93,85,91]],"Rahul Shah":[852,[75,91,88,80,90]]},"2026-07-30":{"Ravi":[970,[96,100,99,95,97]],"Kevan Bhate":[945,[92,100,96,93,94]],"Rahul Shah":[843,[93,95,98,74,79]]},"2026-07-31":{"Ravi":[924,[98,99,92,99,82]],"Kevan Bhate":[732,[88,86,87,69,59]],"Rahul Shah":[734,[69,92,84,77,58]]},"2026-08-01":{"Ravi":[960,[100,98,96,97,93]],"Kevan Bhate":[831,[99,99,96,69,78]],"Rahul Shah":[888,[86,99,92,80,93]]},"2026-08-02":{"Ravi":[951,[97,97,98,98,89]],"Kevan Bhate":[916,[97,94,97,93,84]]},"2026-08-03":{"Ravi":[909,[98,99,83,89,93]],"Kevan Bhate":[793,[95,96,88,80,62]],"Rahul Shah":[732,[98,99,95,62,53]]},"2026-08-04":{"Ravi":[968,[100,99,98,95,96]],"Kevan Bhate":[823,[95,92,93,68,82]],"Rahul Shah":[840,[98,98,91,62,92]]},"2026-08-05":{"Ravi":[869,[92,71,86,98,80]],"Kevan Bhate":[796,[72,92,88,87,65]],"Rahul Shah":[690,[86,96,80,81,35]]},"2026-08-06":{"Ravi":[980,[89,100,100,99,98]],"Kevan Bhate":[942,[86,92,100,91,97]],"Rahul Shah":[928,[88,97,100,85,96]]},"2026-08-07":{"Ravi":[903,[92,99,92,80,96]],"Kevan Bhate":[916,[98,96,100,82,92]],"Rahul Shah":[900,[82,97,95,99,78]]},"2026-08-08":{"Ravi":[913,[96,98,100,79,94]],"Kevan Bhate":[886,[94,88,100,86,82]],"Rahul Shah":[897,[100,95,99,72,96]]},"2026-08-09":{"Ravi":[954,[97,96,100,96,91]],"Kevan Bhate":[923,[98,96,99,100,77]]},"2026-08-10":{"Ravi":[907,[90,93,98,93,83]],"Kevan Bhate":[910,[90,72,86,94,98]],"Rahul Shah":[912,[97,97,95,77,99]]},"2026-08-11":{"Ravi":[971,[100,94,96,96,99]],"Kevan Bhate":[820,[80,89,99,82,69]],"Rahul Shah":[923,[89,98,80,95,97]]},"2026-08-12":{"Ravi":[957,[99,97,91,95,98]],"Kevan Bhate":[930,[98,80,91,94,96]]},"2026-08-13":{"Ravi":[906,[98,94,99,85,87]],"Kevan Bhate":[928,[97,99,99,92,86]]},"2026-08-14":{"Ravi":[690,[98,88,99,98,4]],"Kevan Bhate":[934,[82,89,95,92,99]],"Rahul Shah":[696,[99,80,89,87,26]]},"2026-08-15":{"Ravi":[973,[96,100,99,99,94]],"Kevan Bhate":[967,[92,95,99,100,94]],"Rahul Shah":[981,[96,100,100,100,95]]},"2026-08-16":{"Ravi":[957,[96,100,94,96,95]],"Kevan Bhate":[977,[93,99,97,98,99]],"Rahul Shah":[885,[97,100,95,86,80]]},"2026-08-17":{"Ravi":[817,[99,100,96,82,60]],"Kevan Bhate":[885,[98,100,84,100,73]],"Rahul Shah":[921,[99,100,97,93,83]]},"2026-08-18":{"Ravi":[909,[99,85,82,96,91]],"Kevan Bhate":[944,[99,97,98,97,87]],"Rahul Shah":[855,[99,88,85,79,87]]},"2026-08-19":{"Ravi":[792,[100,96,88,92,48]],"Kevan Bhate":[778,[97,80,95,60,77]]},"2026-08-20":{"Ravi":[961,[96,98,97,95,96]],"Kevan Bhate":[812,[97,98,97,70,71]],"Rahul Shah":[801,[95,91,93,60,83]]},"2026-08-21":{"Ravi":[921,[97,97,98,88,89]],"Kevan Bhate":[841,[97,99,99,86,63]]},"2026-08-22":{"Ravi":[935,[98,87,96,95,91]],"Kevan Bhate":[886,[96,89,82,95,84]]},"2026-08-23":{"Ravi":[930,[99,95,89,95,91]],"Kevan Bhate":[829,[97,80,80,78,86]]},"2026-08-24":{"Ravi":[924,[94,100,95,80,100]],"Kevan Bhate":[826,[96,99,92,80,69]],"Rahul Shah":[809,[100,100,84,60,87]]},"2026-08-25":{"Ravi":[952,[93,95,100,92,96]],"Kevan Bhate":[956,[99,88,98,96,95]],"Rahul Shah":[954,[93,88,100,96,95]]},"2026-08-26":{"Ravi":[908,[99,98,96,94,79]],"Kevan Bhate":[904,[100,96,93,95,79]],"Rahul Shah":[870,[99,95,89,89,77]]},"2026-08-27":{"Ravi":[914,[93,87,88,97,89]],"Kevan Bhate":[881,[92,80,86,84,95]],"Rahul Shah":[772,[83,75,70,86,72]]},"2026-08-28":{"Ravi":[959,[100,99,89,95,99]],"Kevan Bhate":[927,[97,98,96,81,99]]},"2026-08-29":{"Ravi":[910,[96,95,94,95,82]],"Kevan Bhate":[865,[93,89,97,95,68]],"Rahul Shah":[851,[96,94,77,78,91]]},"2026-08-30":{"Ravi":[954,[83,97,99,98,94]],"Kevan Bhate":[938,[92,97,94,95,92]],"Rahul Shah":[893,[100,97,93,80,90]]},"2026-08-31":{"Ravi":[914,[100,98,97,88,86]],"Kevan Bhate":[874,[98,98,96,86,76]],"Rahul Shah":[911,[100,98,97,91,82]]},"2026-09-01":{"Ravi":[952,[100,100,100,92,92]],"Kevan Bhate":[817,[99,100,84,90,60]],"Rahul Shah":[601,[93,100,69,76,14]]},"2026-09-02":{"Ravi":[952,[100,100,100,92,92]],"Kevan Bhate":[905,[99,99,79,91,92]],"Rahul Shah":[866,[100,95,100,91,66]]},"2026-09-03":{"Ravi":[969,[99,99,99,91,100]],"Kevan Bhate":[966,[99,91,94,96,100]],"Rahul Shah":[899,[99,97,95,93,78]]},"2026-09-04":{"Ravi":[915,[94,86,96,89,92]],"Kevan Bhate":[688,[96,80,4,80,88]],"Rahul Shah":[689,[95,72,6,93,77]]},"2026-09-05":{"Ravi":[886,[100,100,97,78,86]],"Kevan Bhate":[816,[95,98,97,86,57]],"Rahul Shah":[829,[100,100,94,89,58]]},"2026-09-06":{"Ravi":[908,[98,100,100,73,97]],"Kevan Bhate":[946,[98,99,97,93,92]],"Rahul Shah":[821,[97,100,99,100,42]]},"2026-09-07":{"Ravi":[671,[97,91,96,48,49]],"Kevan Bhate":[795,[94,92,96,79,60]],"Rahul Shah":[769,[100,100,64,70,77]]},"2026-09-08":{"Ravi":[933,[94,94,98,95,88]],"Kevan Bhate":[948,[100,97,95,98,89]],"Rahul Shah":[953,[100,95,100,95,91]]},"2026-09-09":{"Ravi":[947,[99,100,98,86,98]],"Kevan Bhate":[873,[97,95,99,92,69]],"Rahul Shah":[833,[98,100,94,69,80]]},"2026-09-10":{"Ravi":[897,[100,96,100,75,92]],"Kevan Bhate":[879,[98,98,94,75,90]],"Rahul Shah":[912,[98,98,100,77,95]]},"2026-09-11":{"Ravi":[915,[98,93,80,100,88]],"Kevan Bhate":[894,[93,87,63,99,97]],"Rahul Shah":[885,[96,89,80,87,93]]},"2026-09-12":{"Ravi":[928,[85,98,98,94,89]],"Kevan Bhate":[899,[85,100,96,94,80]]},"2026-09-13":{"Ravi":[905,[94,97,96,84,90]],"Kevan Bhate":[856,[80,95,96,80,83]]},"2026-09-14":{"Ravi":[914,[97,99,89,89,91]],"Kevan Bhate":[926,[97,98,97,90,89]],"Rahul Shah":[960,[93,100,97,92,99]]},"2026-09-15":{"Ravi":[913,[99,98,97,96,78]],"Kevan Bhate":[914,[93,90,91,97,86]]},"2026-09-16":{"Ravi":[951,[96,92,95,93,98]],"Kevan Bhate":[807,[96,61,91,63,93]],"Rahul Shah":[812,[96,86,99,65,79]]},"2026-09-17":{"Ravi":[988,[100,97,97,100,99]],"Kevan Bhate":[889,[94,98,95,77,92]],"Rahul Shah":[990,[97,100,98,100,99]]},"2026-09-18":{"Ravi":[935,[98,80,95,93,96]],"Kevan Bhate":[928,[94,86,80,97,99]],"Rahul Shah":[921,[94,95,84,98,90]]},"2026-09-19":{"Ravi":[948,[100,91,98,88,99]],"Kevan Bhate":[876,[97,92,96,85,80]],"Rahul Shah":[948,[99,89,98,88,100]]},"2026-09-20":{"Ravi":[917,[96,95,90,89,93]],"Kevan Bhate":[873,[79,94,77,89,93]]},"2026-09-21":{"Ravi":[908,[99,98,84,100,81]],"Kevan Bhate":[924,[99,98,92,100,81]],"Rahul Shah":[845,[99,96,61,100,76]]},"2026-09-22":{"Ravi":[943,[100,89,95,100,88]],"Kevan Bhate":[933,[100,93,91,90,96]]},"2026-09-23":{"Ravi":[910,[95,99,85,84,98]],"Kevan Bhate":[926,[98,91,82,94,97]]},"2026-09-24":{"Ravi":[848,[91,89,100,89,67]],"Kevan Bhate":[806,[98,86,95,57,87]],"Rahul Shah":[874,[97,89,80,78,98]]},"2026-09-25":{"Ravi":[917,[100,100,78,98,89]],"Kevan Bhate":[887,[98,94,94,92,77]],"Rahul Shah":[861,[100,85,80,81,91]]},"2026-09-26":{"Ravi":[948,[96,99,96,90,97]],"Kevan Bhate":[912,[95,96,92,98,81]],"Rahul Shah":[907,[100,94,88,89,90]]},"2026-09-27":{"Ravi":[918,[95,95,97,91,87]],"Rahul Shah":[968,[95,94,100,93,100]]},"2026-09-28":{"Ravi":[900,[79,98,96,94,83]],"Kevan Bhate":[888,[84,96,96,92,80]]},"2026-09-29":{"Ravi":[876,[96,92,89,93,77]],"Kevan Bhate":[849,[83,94,78,92,80]],"Rahul Shah":[833,[83,78,96,80,80]]},"2026-09-30":{"Ravi":[898,[97,99,99,95,73]],"Kevan Bhate":[908,[95,95,98,80,94]],"Rahul Shah":[851,[99,96,100,80,72]]},"2026-10-01":{"Ravi":[898,[88,99,96,83,90]],"Kevan Bhate":[847,[82,88,100,87,72]]},"2026-10-02":{"Ravi":[966,[100,95,99,96,95]],"Kevan Bhate":[953,[99,92,99,98,90]],"Rahul Shah":[929,[100,92,94,94,89]]},"2026-10-03":{"Ravi":[964,[100,92,98,99,93]],"Kevan Bhate":[884,[94,82,99,97,73]],"Rahul Shah":[925,[90,88,93,97,90]]},"2026-10-04":{"Ravi":[948,[96,90,96,93,97]],"Kevan Bhate":[650,[95,96,84,97,0]],"Rahul Shah":[771,[94,81,94,96,40]]},"2026-10-05":{"Ravi":[863,[100,99,89,80,82]],"Rahul Shah":[869,[97,98,97,80,80]]},"2026-10-06":{"Ravi":[883,[95,92,87,94,80]],"Kevan Bhate":[862,[96,94,81,80,90]],"Rahul Shah":[894,[97,96,73,93,92]]},"2026-10-07":{"Ravi":[884,[98,85,91,93,80]],"Rahul Shah":[879,[95,100,93,86,80]]},"2026-10-08":{"Ravi":[971,[100,94,96,99,96]],"Rahul Shah":[832,[100,88,100,73,75]]},"2026-10-09":{"Ravi":[937,[99,90,92,94,94]],"Kevan Bhate":[878,[98,96,93,82,84]],"Rahul Shah":[940,[98,89,93,96,93]]},"2026-10-10":{"Ravi":[910,[99,89,91,91,89]],"Kevan Bhate":[926,[99,94,92,88,95]]},"2026-10-11":{"Ravi":[813,[100,91,95,52,92]],"Kevan Bhate":[829,[95,94,98,68,80]],"Rahul Shah":[942,[89,89,100,100,88]]},"2026-10-12":{"Ravi":[970,[100,99,93,97,98]],"Rahul Shah":[909,[100,96,76,94,93]]},"2026-10-13":{"Ravi":[948,[97,80,96,100,93]],"Kevan Bhate":[811,[97,80,92,71,79]]},"2026-10-14":{"Ravi":[972,[97,100,92,99,98]]},"2026-10-15":{"Ravi":[868,[99,100,93,98,63]],"Kevan Bhate":[701,[98,96,75,89,30]],"Rahul Shah":[891,[97,84,91,98,78]]},"2026-10-16":{"Ravi":[933,[100,96,85,89,100]],"Kevan Bhate":[912,[96,95,86,88,95]],"Rahul Shah":[899,[100,93,86,90,88]]},"2026-10-17":{"Ravi":[865,[92,100,83,89,80]],"Kevan Bhate":[947,[94,94,93,98,93]],"Rahul Shah":[901,[93,100,93,89,85]]},"2026-10-18":{"Ravi":[945,[98,97,99,93,91]],"Rahul Shah":[923,[99,99,100,90,85]]},"2026-10-19":{"Ravi":[875,[94,100,87,97,72]]},"2026-10-20":{"Ravi":[889,[97,97,82,89,88]],"Kevan Bhate":[891,[99,80,92,90,86]],"Rahul Shah":[875,[99,89,81,86,89]]},"2026-10-21":{"Ravi":[871,[100,100,97,79,80]],"Kevan Bhate":[907,[89,97,98,94,81]],"Rahul Shah":[877,[87,87,89,95,80]]},"2026-10-22":{"Ravi":[937,[100,100,88,89,98]],"Kevan Bhate":[904,[100,100,88,80,96]]},"2026-10-23":{"Ravi":[973,[93,97,96,97,100]]},"2026-10-24":{},"2026-10-25":{"Ravi":[926,[100,95,94,91,90]]},"2026-10-26":{"Ravi":[901,[98,100,92,90,83]]},"2026-10-27":{"Ravi":[965,[95,94,100,94,98]],"Rahul Shah":[913,[99,90,95,80,98]]},"2026-10-28":{"Ravi":[920,[100,90,80,95,95]],"Kevan Bhate":[883,[100,92,80,95,82]],"Rahul Shah":[911,[91,90,86,99,87]]},"2026-10-29":{"Ravi":[925,[90,98,100,87,92]],"Rahul Shah":[919,[90,95,100,88,90]]}};
+const P = ["Ravi","Kevan Bhate","Rahul Shah"];
+const SHORT = {"Ravi":"Ravi","Kevan Bhate":"Kevan","Rahul Shah":"Rahul"};
+const COL = {"Ravi":"var(--s1)","Kevan Bhate":"var(--s2)","Rahul Shah":"var(--s3)"};
+const fmtD = d => { const t=new Date(d+"T12:00:00"); return t.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); };
+const fmtDW = d => { const t=new Date(d+"T12:00:00"); return t.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); };
+const f1 = x => x==null?"–":(+x).toFixed(1);
+const el = (h)=>{const t=document.createElement("template");t.innerHTML=h.trim();return t.content.firstChild;};
+
+/* standings */
+const order=[...P].sort((a,b)=>S.players[b].mean-S.players[a].mean);
+const board=document.getElementById("board");
+order.forEach((p,i)=>{
+  const o=S.players[p]; const d7=o.r7-o.mean;
+  const played = `${o.n} / ${D.days.length} <span class="sub">(${o.part}%)</span>`;
+  board.appendChild(el(`<article class="pl" style="--c:${COL[p]}">
+    <div class="pl-top"><div class="pl-name"><span class="dot"></span>${p}</div><span class="rank">#${i+1}</span></div>
+    <div><div class="big">${f1(o.mean)} <small>avg</small></div></div>
+    <dl class="kv" style="margin:0">
+      <div><dt>7-day avg</dt><dd>${f1(o.r7)} <span class="sub ${d7>=0?'up':'down'}">${d7>=0?'▲':'▼'}${Math.abs(d7).toFixed(1)}</span></dd></div>
+      <div><dt>30-day avg</dt><dd>${f1(o.r30)}</dd></div>
+      <div><dt>Median</dt><dd>${o.median}</dd></div>
+      <div><dt>Days won</dt><dd>${o.wins}</dd></div>
+      <div><dt>Best</dt><dd>${o.best[0]} <span class="sub">${fmtD(o.best[1])}</span></dd></div>
+      <div><dt>Worst</dt><dd>${o.worst[0]} <span class="sub">${fmtD(o.worst[1])}</span></dd></div>
+      <div><dt>900+ games</dt><dd>${o.n900} <span class="sub">(${o.p900}%)</span></dd></div>
+      <div><dt>Played</dt><dd>${played}</dd></div>
+    </dl></article>`));
+});
+
+/* line chart */
+const legend=document.getElementById("legend");
+P.forEach(p=>legend.appendChild(el(`<span style="--c:${COL[p]}"><i></i>${p}</span>`)));
+const chartBox=document.getElementById("chart");
+let mode="r7";
+function drawLine(){
+  const W=chartBox.clientWidth||900, H=Math.max(260,Math.min(380,W*0.42));
+  const m={l:40,r:52,t:12,b:26}, iw=W-m.l-m.r, ih=H-m.t-m.b;
+  const days=D.days, n=days.length;
+  const vals=P.flatMap(p=>D.players[p][mode]).filter(v=>v!=null);
+  let lo=Math.floor((Math.min(...vals)-5)/25)*25, hi=Math.ceil((Math.max(...vals)+5)/25)*25;
+  if(mode==="raw"){lo=Math.floor(Math.min(...vals)/50)*50; hi=1000;}
+  if(mode==="vw"){lo=Math.min(-5,Math.floor(Math.min(...vals)/5)*5); hi=Math.ceil(Math.max(...vals)/5)*5;}
+  const x=i=>m.l+iw*i/(n-1), y=v=>m.t+ih*(1-(v-lo)/(hi-lo));
+  const step = mode==="vw"?5:((hi-lo)>200?50:25);
+  let g="";
+  for(let v=lo; v<=hi; v+=step){ g+=`<line x1="${m.l}" x2="${m.l+iw}" y1="${y(v)}" y2="${y(v)}" stroke="${mode==="vw"&&v===0?"var(--muted)":"var(--grid)"}" stroke-width="1"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end">${mode==="vw"&&v>0?"+"+v:v}</text>`; }
+  days.forEach((d,i)=>{ if(d.endsWith("-01")||i===0){ g+=`<line x1="${x(i)}" x2="${x(i)}" y1="${m.t}" y2="${m.t+ih}" stroke="var(--grid)"/><text x="${x(i)+4}" y="${H-8}">${fmtD(d)}</text>`; }});
+  let lines="", ends="";
+  const endLabels=[];
+  P.forEach(p=>{
+    const a=D.players[p][mode];
+    if(mode==="raw"){
+      a.forEach((v,i)=>{ if(v!=null) lines+=`<circle cx="${x(i)}" cy="${y(v)}" r="3.2" fill="${COL[p]}" stroke="var(--card)" stroke-width="1.5"/>`; });
+    } else {
+      let dstr="",pen=false;
+      a.forEach((v,i)=>{ if(v==null){pen=false;return;} dstr+=(pen?"L":"M")+x(i).toFixed(1)+","+y(v).toFixed(1); pen=true; });
+      lines+=`<path d="${dstr}" fill="none" stroke="${COL[p]}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      let li=a.length-1; while(a[li]==null) li--;
+      ends+=`<circle cx="${x(li)}" cy="${y(a[li])}" r="4" fill="${COL[p]}" stroke="var(--card)" stroke-width="2"/>`;
+      endLabels.push({p,y:y(a[li]),v:a[li],x:x(li)});
+    }
+  });
+  endLabels.sort((a,b)=>a.y-b.y); for(let i=1;i<endLabels.length;i++){ if(endLabels[i].y-endLabels[i-1].y<14) endLabels[i].y=endLabels[i-1].y+14; }
+  endLabels.forEach(e=>{ ends+=`<text x="${m.l+iw+8}" y="${e.y+4}" style="fill:var(--ink);font-weight:500">${mode==="vw"?(e.v>0?"+":"")+e.v.toFixed(1):Math.round(e.v)}</text>`; });
+  chartBox.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${mode} scores over time">${g}${lines}${ends}<line id="xh" x1="0" x2="0" y1="${m.t}" y2="${m.t+ih}" stroke="var(--muted)" stroke-dasharray="3 3" opacity="0"/><rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" id="hit"/></svg><div class="tip" hidden></div>`;
+  const svg=chartBox.querySelector("svg"), tip=chartBox.querySelector(".tip"), xh=svg.querySelector("#xh");
+  const move=ev=>{
+    const r=svg.getBoundingClientRect(); const sx=(ev.clientX-r.left)*W/r.width;
+    const i=Math.max(0,Math.min(n-1,Math.round((sx-m.l)/iw*(n-1))));
+    xh.setAttribute("x1",x(i)); xh.setAttribute("x2",x(i)); xh.setAttribute("opacity",1);
+    const rowsH=P.map(p=>[p,D.players[p][mode][i]]).sort((a,b)=>(b[1]??-1)-(a[1]??-1))
+      .map(([p,v])=>`<div class="r"><span><span class="dot" style="--c:${COL[p]}"></span>${SHORT[p]}</span><span class="mono">${v==null?"–":(mode==="raw"?v:f1(v))}</span></div>`).join("");
+    tip.innerHTML=`<b>${fmtDW(D.days[i])}</b>${rowsH}`; tip.hidden=false;
+    const px=x(i)*r.width/W; const tw=tip.offsetWidth;
+    tip.style.left=(px+12+tw>r.width? px-12-tw : px+12)+"px"; tip.style.top="8px";
+  };
+  svg.addEventListener("pointermove",move); svg.addEventListener("pointerdown",move);
+  svg.addEventListener("pointerleave",()=>{tip.hidden=true; xh.setAttribute("opacity",0);});
+}
+const titles={r7:["Rolling 7-day average","Average of each player's scores over the previous 7 days, plotted daily."],r30:["Rolling 30-day average","Average over the previous 30 days. Early values use whatever games exist so far."],raw:["Daily scores","Every individual result."],vw:["Rolling 7-day vs the world","Average points per round above MapTap’s global average for the same round, over the previous 7 days. This adjusts for how hard each map was. World data runs to 29 Oct."]};
+[["b7","r7"],["b30","r30"],["braw","raw"],["bvw","vw"]].forEach(([id,md])=>{
+  document.getElementById(id).addEventListener("click",()=>{mode=md;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.id===id));
+    document.getElementById("chartTitle").textContent=titles[md][0];document.getElementById("chartSub").textContent=titles[md][1];drawLine();});
+});
+drawLine(); let rt; addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{drawLine();drawRounds();},120);});
+
+/* rounds chart */
+const rbox=document.getElementById("rchart");
+function drawRounds(){
+  const W=rbox.clientWidth||420,H=240,m={l:34,r:14,t:10,b:28},iw=W-m.l-m.r,ih=H-m.t-m.b,lo=78,hi=98;
+  const x=i=>m.l+iw*i/4, y=v=>m.t+ih*(1-(v-lo)/(hi-lo));
+  let g=""; for(let v=lo;v<=hi;v+=4) g+=`<line x1="${m.l}" x2="${m.l+iw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+  for(let i=0;i<5;i++) g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">R${i+1}</text>`;
+  let s="";
+  P.forEach(p=>{const a=D.players[p].rounds; s+=`<path d="${a.map((v,i)=>(i?"L":"M")+x(i)+","+y(v)).join("")}" fill="none" stroke="${COL[p]}" stroke-width="2.2"/>`;
+    a.forEach((v,i)=>s+=`<circle cx="${x(i)}" cy="${y(v)}" r="4.5" fill="${COL[p]}" stroke="var(--card)" stroke-width="2"><title>${p} round ${i+1}: ${v}</title></circle>`);});
+  rbox.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Average score per round">${g}${s}</svg>`;
+  rbox.insertAdjacentHTML("afterend","");
+}
+drawRounds();
+
+/* h2h */
+const h=document.getElementById("h2h");
+h.innerHTML=`<thead><tr><th></th>${P.map(p=>`<th>vs ${SHORT[p]}</th>`).join("")}</tr></thead><tbody>${P.map(a=>`<tr><td><span class="dot" style="--c:${COL[a]}"></span> ${SHORT[a]}</td>${P.map(b=>{ if(a===b) return `<td class="self">·</td>`; const [w,t,n]=S.h2h[a+"|"+b]; const [lw]=S.h2h[b+"|"+a]; return `<td class="num ${w>lw?'cellw':''}">${w}–${lw}${t?`–${t}`:''} <span class="rounds" style="display:inline">(${Math.round(100*w/n)}%)</span></td>`;}).join("")}</tr>`).join("")}</tbody>`;
+
+/* more numbers */
+const rowsM=[
+ ["Average round score",p=>f1(S.players[p].roundmean)],
+ ["Perfect 100 rounds",p=>`${S.players[p].hundreds} <span class="rounds" style="display:inline">(${S.players[p].per100}% of rounds)</span>`],
+ ["Rounds under 50",p=>S.players[p].sub50],
+ ["950+ games",p=>S.players[p].n950],
+ ["Std deviation",p=>f1(S.players[p].sd)],
+ ["Avg vs that day's group avg",p=>{const v=S.players[p].rel;return `<span class="${v>=0?'up':'down'}">${v>=0?'+':''}${v.toFixed(1)}</span>`}],
+ ["Last place (all 3 played, "+S.full+" days)",p=>S.players[p].lastplace],
+ ["First 7 games avg",p=>f1(S.players[p].first7)],
+ ["Last 7 games avg",p=>f1(S.players[p].last7)],
+ ["July avg",p=>f1(S.players[p].months["07"])],
+ ["August avg",p=>f1(S.players[p].months["08"])],
+ ["September avg",p=>f1(S.players[p].months["09"])],
+ ["October avg",p=>f1(S.players[p].months["10"])],
+ ["Longest daily streak",p=>S.players[p].streak_best],
+ ["Posted first (days ≥2 played)",p=>S.first[p]||0],
+];
+document.getElementById("more").innerHTML=`<thead><tr><th></th>${P.map(p=>`<th>${SHORT[p]}</th>`).join("")}</tr></thead><tbody>${rowsM.map(([k,fn])=>`<tr><td>${k}</td>${P.map(p=>`<td class="num">${fn(p)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+
+/* themed */
+const TH=[["WW2 Trivia (12 rds)","31 Jul",{"Kevan Bhate":751,"Ravi":703}],["Film Locations (6 rds)","31 Jul",{"Kevan Bhate":860,"Ravi":783,"Rahul Shah":732}],["“New City” names (10 rds)","5 Aug",{"Ravi":945,"Kevan Bhate":887}],["Ancient Cities (5 rds)","5 Aug",{"Ravi":927,"Kevan Bhate":861}]];
+document.getElementById("themed").innerHTML=`<thead><tr><th>Map</th>${P.map(p=>`<th>${SHORT[p]}</th>`).join("")}</tr></thead><tbody>${TH.map(([n,d,s])=>{const mx=Math.max(...Object.values(s));return `<tr><td>${n}<span class="rounds">${d}</span></td>${P.map(p=>`<td class="num ${s[p]===mx?'w':''}">${s[p]??'<span class="l">–</span>'}</td>`).join("")}</tr>`}).join("")}</tbody>`;
+
+/* guests */
+const G=[];Object.entries(S.guests).forEach(([g,arr])=>arr.forEach(([d,sc,who])=>G.push([d,g,sc,who])));G.sort();
+document.getElementById("guests").innerHTML=`<thead><tr><th>Date</th><th>Label in chat</th><th>Posted by</th><th>Score</th></tr></thead><tbody>${G.map(([d,g,sc,who])=>`<tr><td>${fmtD(d)}</td><td>${g}</td><td>${SHORT[who]}</td><td class="num">${sc}</td></tr>`).join("")}</tbody>`;
+
+/* log */
+const lg=[...D.days].reverse();
+document.getElementById("log").innerHTML=`<thead><tr><th>Day</th>${P.map(p=>`<th>${SHORT[p]}</th>`).join("")}<th>Winner</th></tr></thead><tbody>${lg.map(d=>{const e=LOG[d]||{};const sc=P.filter(p=>e[p]).map(p=>e[p][0]);const mx=Math.max(...sc);const winners=sc.length>1?P.filter(p=>e[p]&&e[p][0]===mx).map(p=>SHORT[p]).join(" & "):"–";
+ return `<tr><td>${fmtDW(d)}</td>${P.map(p=>e[p]?`<td class="num ${sc.length>1&&e[p][0]===mx?'w':''}">${e[p][0]}<span class="rounds">${e[p][1].join(" · ")}</span></td>`:`<td class="num l">–</td>`).join("")}<td>${winners}</td></tr>`}).join("")}</tbody>`;
+
+/* insights */
+const INS=[
+ ["Dominance", "Ravi has won 60 of 92 contested days", "He's beaten Kevan on 62 of 84 shared days and Rahul 50–20, with one tie. He's held the best 7-day average on 86 of 98 days, and he's back in front now after Rahul (21 Oct) and Kevan (22–23 Oct) briefly took it."],
+ ["Attendance", "Ravi's 92-day run has ended", "Nobody posted in Lionpack on 24 Oct, so Ravi's streak stopped at 92 days. He's played 97 of 98. Kevan is on 84 and Rahul on 71."],
+ ["Ravi", "Back to his best form", "Ravi's 7-day average is 935.0, his highest since 22 Sep. His 973 on 23 Oct was his best score since 17 Sep, and he's won his last four contested days."],
+ ["Kevan", "A quiet week for Kevan", "He played 22 and 28 Oct only. His run of three wins (17–21 Oct) is still his best of the season, but his October average (861.6) is his lowest month apart from July."],
+ ["Rahul", "Rahul's best month by a distance", "His October average is 894.7, up every month from 840 in July. His weekly median this week is 913, his best since mid-September, and his Elo peaked at 1522 on 15 Oct."],
+ ["Rounds", "The gap still opens in rounds 3 to 5", "Rahul and Ravi hit perfect 100s at almost the same rate (13.0% and 13.8% of rounds), but by round 5 it's 81.5 against Ravi's 88.3. Kevan has 19 hundreds in 420 rounds (4.5%)."],
+ ["Shared blind spots", "Kevan and Rahul struggle on the same days", "Their daily scores correlate at 0.51. Ravi's barely move with theirs (0.21 with Kevan, 0.30 with Rahul)."],
+ ["Hard and easy days", "The hardest map is still 7 Sep", "It averaged 745 and gave Ravi his worst game (671). The easiest was 15 Aug, with all three over 965. Nobody has hit 1,000 yet; Rahul's 990 on 17 Sep is the closest."],
+];
+document.getElementById("ins").innerHTML=INS.map(([t,h,p])=>`<article><span class="tag">${t}</span><h3>${h}</h3><p>${p}</p></article>`).join("");
+/* ===== geography ===== */
+const GEO = {"cont":{"Africa":{"Ravi":{"n":70,"avg":91.5,"vsw":14.5},"Kevan Bhate":{"n":62,"avg":86.4,"vsw":9.6},"Rahul Shah":{"n":48,"avg":82.5,"vsw":6.3},"_world":76.9,"_n":70},"Antarctica":{"Ravi":{"n":1,"avg":63,"vsw":-4.6},"Kevan Bhate":{"n":1,"avg":30,"vsw":-37.6},"Rahul Shah":{"n":1,"avg":78,"vsw":10.4},"_world":67.6,"_n":1},"Asia":{"Ravi":{"n":121,"avg":92.2,"vsw":8.3},"Kevan Bhate":{"n":103,"avg":90.4,"vsw":6.6},"Rahul Shah":{"n":86,"avg":88.2,"vsw":4.3},"_world":83.9,"_n":121},"Europe":{"Ravi":{"n":118,"avg":96.8,"vsw":5.4},"Kevan Bhate":{"n":102,"avg":95.5,"vsw":4.1},"Rahul Shah":{"n":82,"avg":95.1,"vsw":4.0},"_world":91.4,"_n":118},"North America":{"Ravi":{"n":106,"avg":94.2,"vsw":3.3},"Kevan Bhate":{"n":95,"avg":87.8,"vsw":-3.0},"Rahul Shah":{"n":84,"avg":88.3,"vsw":-2.9},"_world":90.9,"_n":106},"Ocean":{"Ravi":{"n":1,"avg":92,"vsw":19.3},"Kevan Bhate":{"n":1,"avg":60,"vsw":-12.7},"Rahul Shah":{"n":1,"avg":14,"vsw":-58.7},"_world":72.7,"_n":1},"Oceania":{"Ravi":{"n":23,"avg":86.2,"vsw":7.8},"Kevan Bhate":{"n":17,"avg":83,"vsw":5.1},"Rahul Shah":{"n":20,"avg":87.8,"vsw":7.9},"_world":78.4,"_n":23},"South America":{"Ravi":{"n":45,"avg":88.8,"vsw":8.4},"Kevan Bhate":{"n":39,"avg":84.1,"vsw":3.9},"Rahul Shah":{"n":33,"avg":89.2,"vsw":8.5},"_world":80.4,"_n":45}},"region":{"Antarctica":{"Ravi":{"n":1,"avg":63,"vsw":-4.6},"Kevan Bhate":{"n":1,"avg":30,"vsw":-37.6},"Rahul Shah":{"n":1,"avg":78,"vsw":10.4},"_world":67.6,"_n":1},"At sea (Titanic wreck)":{"Ravi":{"n":1,"avg":92,"vsw":19.3},"Kevan Bhate":{"n":1,"avg":60,"vsw":-12.7},"Rahul Shah":{"n":1,"avg":14,"vsw":-58.7},"_world":72.7,"_n":1},"Canada":{"Ravi":{"n":12,"avg":93.2,"vsw":5.1},"Kevan Bhate":{"n":12,"avg":82.5,"vsw":-5.7},"Rahul Shah":{"n":11,"avg":85.7,"vsw":-2.9},"_world":88.2,"_n":12},"Central & Eastern Europe":{"Ravi":{"n":33,"avg":94.9,"vsw":7.6},"Kevan Bhate":{"n":30,"avg":92.8,"vsw":5.5},"Rahul Shah":{"n":25,"avg":90.8,"vsw":3.6},"_world":87.3,"_n":33},"East Asia":{"Ravi":{"n":43,"avg":93.9,"vsw":6.8},"Kevan Bhate":{"n":38,"avg":91.6,"vsw":4.7},"Rahul Shah":{"n":32,"avg":90.2,"vsw":4.1},"_world":87.1,"_n":43},"Greenland":{"Ravi":{"n":1,"avg":87,"vsw":0.5},"_world":86.5,"_n":1},"Mexico, Central America & Caribbean":{"Ravi":{"n":21,"avg":93.2,"vsw":7.8},"Kevan Bhate":{"n":19,"avg":84.7,"vsw":-0.1},"Rahul Shah":{"n":16,"avg":82.2,"vsw":-4.1},"_world":85.4,"_n":21},"Middle East & Caucasus":{"Ravi":{"n":20,"avg":94.8,"vsw":7.9},"Kevan Bhate":{"n":16,"avg":93.4,"vsw":7.0},"Rahul Shah":{"n":15,"avg":87.9,"vsw":0.1},"_world":86.9,"_n":20},"Nordics":{"Ravi":{"n":13,"avg":95.8,"vsw":3.7},"Kevan Bhate":{"n":9,"avg":94.8,"vsw":2.9},"Rahul Shah":{"n":8,"avg":93.9,"vsw":2.4},"_world":92.2,"_n":13},"North Africa":{"Ravi":{"n":12,"avg":94.2,"vsw":8.4},"Kevan Bhate":{"n":11,"avg":91.2,"vsw":5.9},"Rahul Shah":{"n":8,"avg":87.8,"vsw":1.0},"_world":85.8,"_n":12},"Oceania":{"Ravi":{"n":23,"avg":86.2,"vsw":7.8},"Kevan Bhate":{"n":17,"avg":83,"vsw":5.1},"Rahul Shah":{"n":20,"avg":87.8,"vsw":7.9},"_world":78.4,"_n":23},"Russia, Central Asia & Mongolia":{"Ravi":{"n":16,"avg":79.9,"vsw":4.5},"Kevan Bhate":{"n":15,"avg":85.5,"vsw":10.0},"Rahul Shah":{"n":10,"avg":79.1,"vsw":4.1},"_world":75.4,"_n":16},"South America":{"Ravi":{"n":45,"avg":88.8,"vsw":8.4},"Kevan Bhate":{"n":39,"avg":84.1,"vsw":3.9},"Rahul Shah":{"n":33,"avg":89.2,"vsw":8.5},"_world":80.4,"_n":45},"South Asia":{"Ravi":{"n":25,"avg":93.3,"vsw":9.8},"Kevan Bhate":{"n":23,"avg":90.2,"vsw":6.7},"Rahul Shah":{"n":19,"avg":91.5,"vsw":8.1},"_world":83.6,"_n":25},"Southeast Asia":{"Ravi":{"n":17,"avg":95.2,"vsw":14.1},"Kevan Bhate":{"n":11,"avg":88.8,"vsw":7.8},"Rahul Shah":{"n":10,"avg":85,"vsw":4.1},"_world":81.1,"_n":17},"Sub-Saharan Africa":{"Ravi":{"n":58,"avg":90.9,"vsw":15.8},"Kevan Bhate":{"n":51,"avg":85.4,"vsw":10.4},"Rahul Shah":{"n":40,"avg":81.4,"vsw":7.4},"_world":75.1,"_n":58},"USA":{"Ravi":{"n":72,"avg":94.8,"vsw":1.8},"Kevan Bhate":{"n":64,"avg":89.7,"vsw":-3.4},"Rahul Shah":{"n":57,"avg":90.5,"vsw":-2.5},"_world":93.0,"_n":72},"Western & Southern Europe":{"Ravi":{"n":72,"avg":97.8,"vsw":4.7},"Kevan Bhate":{"n":63,"avg":96.9,"vsw":3.7},"Rahul Shah":{"n":49,"avg":97.5,"vsw":4.5},"_world":93.1,"_n":72}},"splits":[{"date":"2026-10-04","rnd":5,"place":"Nuku'alofa, Tongatapu, Tonga","s":{"Ravi":97,"Kevan Bhate":0,"Rahul Shah":40},"w":46.15},{"date":"2026-08-14","rnd":5,"place":"Hagåtña, Guam, USA","s":{"Kevan Bhate":99,"Ravi":4,"Rahul Shah":26},"w":48.62},{"date":"2026-09-04","rnd":3,"place":"Fort-de-France, Martinique, French Overseas Territory","s":{"Ravi":96,"Kevan Bhate":4,"Rahul Shah":6},"w":71.06},{"date":"2026-09-01","rnd":5,"place":"the location where the Titanic sank","s":{"Ravi":92,"Kevan Bhate":60,"Rahul Shah":14},"w":72.67},{"date":"2026-09-06","rnd":5,"place":"Mbabane, Eswatini","s":{"Rahul Shah":42,"Ravi":97,"Kevan Bhate":92},"w":65.59},{"date":"2026-10-11","rnd":4,"place":"Guadalcanal, Solomon Islands","s":{"Ravi":52,"Kevan Bhate":68,"Rahul Shah":100},"w":50.21}],"hard":[{"date":"2026-09-04","rnd":3,"place":"Fort-de-France, Martinique, French Overseas Territory","s":{"Ravi":96,"Kevan Bhate":4,"Rahul Shah":6},"w":71.06},{"date":"2026-08-14","rnd":5,"place":"Hagåtña, Guam, USA","s":{"Kevan Bhate":99,"Ravi":4,"Rahul Shah":26},"w":48.62},{"date":"2026-10-04","rnd":5,"place":"Nuku'alofa, Tongatapu, Tonga","s":{"Ravi":97,"Kevan Bhate":0,"Rahul Shah":40},"w":46.15},{"date":"2026-09-01","rnd":5,"place":"the location where the Titanic sank","s":{"Ravi":92,"Kevan Bhate":60,"Rahul Shah":14},"w":72.67},{"date":"2026-10-15","rnd":5,"place":"Elephant Island, Antarctica","s":{"Ravi":63,"Rahul Shah":78,"Kevan Bhate":30},"w":67.61},{"date":"2026-08-05","rnd":5,"place":"Petropavlovsk-Kamchatsky, Kamchatka, Russia","s":{"Ravi":80,"Rahul Shah":35,"Kevan Bhate":65},"w":61.31}],"vw":{"Ravi":[5.39,5.24,6.91,8.56,7.44,7.3,7.21,8.46,9.97,9.89,8.81,9.52,8.9,9.01,7.73,6.81,6.86,7.06,7.61,8.6,8.52,7.47,7.31,6.74,6.03,4.92,3.97,5.37,6.74,6.11,6.08,6.99,7.53,8.16,6.67,6.71,6.96,6.77,6.29,6.93,7.72,8.41,8.94,9.45,9.93,9.23,7.99,7.23,6.53,6.0,5.79,5.56,6.18,6.68,7.41,7.64,7.64,7.55,8.56,8.7,8.48,7.7,7.9,7.78,7.59,6.83,6.72,6.83,6.91,6.66,6.55,6.54,8.41,7.89,7.15,6.47,6.75,7.72,8.07,5.96,7.75,8.89,9.93,9.45,8.34,7.14,7.29,5.81,4.96,4.62,4.99,5.55,6.55,6.62,9.01,9.58,9.01,8.46],"Kevan Bhate":[-4.41,0.94,1.57,3.36,2.52,2.8,3.01,3.35,3.46,4.03,2.47,2.06,1.13,1.01,2.3,2.12,2.29,3.17,3.49,4.55,5.32,6.01,6.11,5.97,6.25,7.75,6.97,6.69,5.34,4.34,2.79,2.25,2.08,3.05,2.47,2.91,3.19,4.34,4.37,3.56,3.75,4.7,2.43,2.71,3.53,4.4,4.91,4.0,3.3,5.32,5.64,4.33,3.98,3.88,3.44,2.84,3.24,2.66,3.56,3.75,3.8,5.04,5.93,5.69,5.79,5.57,5.1,4.64,4.66,3.9,3.87,3.17,2.87,2.58,2.14,1.16,0.92,2.17,5.08,6.64,6.64,6.64,6.64,3.95,2.64,1.72,0.32,0.32,0.89,2.3,4.97,5.45,5.55,5.55,5.55,7.25,4.12,1.69],"Rahul Shah":[null,-0.9,-1.53,2.42,3.0,2.36,1.48,0.72,2.12,2.83,0.27,-0.77,-1.99,-0.93,0.31,0.2,0.2,2.53,3.87,6.15,6.83,5.09,5.21,4.45,4.53,3.43,3.43,3.64,5.04,4.13,5.03,2.3,4.3,4.12,1.11,1.11,0.94,1.16,1.83,-1.68,-1.26,0.94,-0.83,-0.15,-0.21,-0.03,2.85,1.86,2.04,4.38,4.27,4.76,5.07,4.82,5.64,5.85,6.49,6.49,6.49,4.83,4.83,5.43,6.04,4.47,3.39,5.0,6.29,5.13,4.96,3.86,4.18,3.89,3.15,2.92,3.15,3.12,2.63,4.07,4.63,5.6,6.68,7.64,8.58,9.96,7.36,6.44,5.0,4.18,3.65,3.67,3.36,3.6,3.88,2.65,2.65,3.36,2.74,3.38]},"lastw":"2026-10-29"};
+P.forEach(p=>D.players[p].vw=GEO.vw[p]);
+const hcell=(avg,vsw,n)=>{ if(avg==null) return `<td class="num l">–</td>`;
+  const a=vsw==null?0:Math.min(1,Math.abs(vsw)/15)*0.55; const c=vsw>=0?"var(--pos)":"var(--neg)";
+  return `<td class="num h" style="--hc:${c};--ha:${a.toFixed(2)}"><span>${avg.toFixed(1)}<span class="sm">${vsw==null?"":(vsw>=0?"+":"")+vsw.toFixed(1)} · ${n} rds</span></span></td>`;};
+function heatTable(id,obj,order){
+  const keys=order||Object.keys(obj);
+  document.getElementById(id).innerHTML=`<thead><tr><th></th><th>World</th>${P.map(p=>`<th>${SHORT[p]}</th>`).join("")}</tr></thead><tbody>${keys.map(k=>{const r=obj[k];
+    return `<tr><td>${k}<span class="sm" style="font-size:11.5px;color:var(--muted);display:block">${r._n} map rounds</span></td><td class="num">${r._world==null?"–":r._world.toFixed(1)}</td>${P.map(p=>r[p]?hcell(r[p].avg,r[p].vsw,r[p].n):`<td class="num l">–</td>`).join("")}</tr>`}).join("")}</tbody>`;
+}
+const contOrder=["Europe","North America","Asia","Oceania","South America","Africa","Antarctica","Ocean"];
+const CONTLAB={"Ocean":"At sea"};
+const contObj={}; contOrder.forEach(k=>contObj[CONTLAB[k]||k]=GEO.cont[k]);
+heatTable("conttab",contObj);
+const regKeys=Object.keys(GEO.region).filter(k=>GEO.region[k]._n>1).sort((a,b)=>GEO.region[a]._world-GEO.region[b]._world);
+heatTable("regtab",GEO.region,regKeys);
+const placeLi=o=>`<li><div><div class="pn">${o.place.replace("the location where the Titanic sank","Where the Titanic sank")}</div><div class="pd">${fmtD(o.date)} · round ${o.rnd}</div></div>
+  <div class="ps">${P.map(p=>`<span><span class="dot" style="--c:${COL[p]}"></span>${o.s[p]}</span>`).join("")}</div>
+  <div class="pw">World average ${o.w==null?"–":o.w.toFixed(0)}</div></li>`;
+document.getElementById("splits").innerHTML=GEO.splits.map(placeLi).join("");
+document.getElementById("hardest").innerHTML=GEO.hard.map(placeLi).join("");
+const GINS=[
+ ["Adjusted for difficulty", "Ravi's best week against the world in a while", "Against MapTap's global average for the same round, Ravi is +7.4 points per round, Kevan +3.8 and Rahul +3.2 over the season. In the 7 days to 29 Oct, Ravi was +8.5, Rahul +3.4 and Kevan +1.7."],
+ ["North America", "Still the only continent where two of you trail the world", "The USA is the world's easiest region (93.0 average). Kevan (−3.4) and Rahul (−2.5) fall below the global field there, and it's Ravi's weakest big region too (+1.8)."],
+ ["Africa", "Africa is still Rahul's weakest continent", "His average there is 82.5, which is +6.3 against the world. He's above the world on every continent except North America."],
+ ["Ravi's edge", "Sub-Saharan Africa is still where Ravi pulls away", "+15.8 per round over 58 rounds: 90.9 against a world average of 75.1. Kevan averages 85.4 there and Rahul 81.4."],
+ ["Patches", "Russia for Kevan, Oceania for Rahul", "Kevan still clearly beats Ravi on Russia & Central Asia (85.5 to 79.9). Rahul has the best Oceania average of the three (87.8)."],
+ ["Blind spots", "Canada for Kevan, the Caribbean for Rahul", "Kevan averages 82.5 on Canadian rounds, 5.7 below the world. Rahul is 4.1 below the world on Mexico, Central America & the Caribbean."],
+ ["Single rounds", "Nauru, and the rounds that split you", "On 26 Oct Ravi scored 83 on Nauru, where the world averaged 41; he was the only one who played. The rounds that split you most are still Tonga (Kevan 0), Guam (Kevan 99, Ravi 4) and Guadalcanal (Rahul 100, Ravi 52)."],
+ ["Easy money", "Western Europe is basically solved", "All three average 96.9–97.8 there. Dover Strait, Brooklyn, Boston and Valletta are still the only places all three of you scored 100."],
+];
+document.getElementById("geoins").innerHTML=GINS.map(([t,h,p])=>`<article><span class="tag">${t}</span><h3>${h}</h3><p>${p}</p></article>`).join("");
+drawLine();
+
+const RHINS=[
+ ["Unbeaten", "Ravi has never been whitewashed", "Across 155 head-to-head days, nobody has beaten Ravi on all five rounds. He's dealt 11 whitewashes: 7 to Rahul and 4 to Kevan, the latest on 15 Oct."],
+ ["Ravi v Kevan", "Ravi takes 68% of the rounds that are decided", "245–115 with 60 tied. Kevan has won the round count 13 times in 84 days."],
+ ["Kevan v Rahul", "Rahul now leads the rounds by one", "141–140 with 34 tied. Kevan still leads the days 36–27, because 9 times he won the day while losing more rounds."],
+ ["Rare sweeps", "Whitewashes between Kevan and Rahul are rare", "Kevan has whitewashed Rahul twice and Rahul has whitewashed Kevan once. Their most common results are 2–3 (13 times) and 3–2 (9)."],
+];
+/* round by round */
+(function(){
+  const RH={"pairs":{"Ravi|Kevan Bhate":{"n":84,"round_w":245,"round_l":115,"round_t":60,"lines":{"3-1":16,"3-2":13,"2-1":5,"4-0":9,"5-0":4,"4-1":12,"2-3":7,"2-2":8,"1-3":3,"1-4":2,"3-0":2,"0-1":1,"2-0":1,"1-1":1},"margin":{"2":17,"1":18,"4":9,"5":4,"3":14,"-1":8,"0":9,"-2":3,"-3":2},"wash_a":[["2026-07-31",924,732],["2026-08-04",968,823],["2026-08-23",930,829],["2026-10-15",868,701]],"wash_b":[],"upsets_a":2,"upsets_b":7},"Ravi|Rahul Shah":{"n":71,"round_w":199,"round_l":101,"round_t":55,"lines":{"3-1":14,"4-1":6,"2-3":4,"5-0":7,"2-1":5,"4-0":6,"3-2":10,"0-3":3,"2-2":7,"1-1":1,"3-0":2,"1-4":2,"0-4":1,"1-3":2,"1-2":1},"margin":{"2":14,"3":8,"-1":5,"5":7,"1":15,"4":6,"-3":5,"0":8,"-4":1,"-2":2},"wash_a":[["2026-07-29",920,852],["2026-07-30",970,843],["2026-07-31",924,734],["2026-08-04",968,840],["2026-08-20",961,801],["2026-08-27",914,772],["2026-10-03",964,925]],"wash_b":[],"upsets_a":1,"upsets_b":7},"Kevan Bhate|Rahul Shah":{"n":63,"round_w":140,"round_l":141,"round_t":34,"lines":{"4-1":6,"3-1":4,"1-3":6,"5-0":2,"3-2":9,"2-2":8,"2-3":13,"1-4":5,"0-4":2,"3-0":2,"1-1":1,"4-0":1,"0-3":1,"0-5":1,"2-1":1,"1-2":1},"margin":{"3":8,"2":4,"-2":6,"5":2,"1":10,"0":9,"-1":14,"-3":6,"-4":2,"4":1,"-5":1},"wash_a":[["2026-07-29",891,852],["2026-08-26",904,870]],"wash_b":[["2026-09-17",990,889]],"upsets_a":9,"upsets_b":4}},"wash_for":{"Ravi":11,"Kevan Bhate":2,"Rahul Shah":1},"wash_against":{"Ravi":0,"Kevan Bhate":5,"Rahul Shah":9},"clean_sweeps":[["2026-07-31","Ravi"],["2026-08-04","Ravi"]]};
+  const short=p=>SHORT[p]||p;
+  document.getElementById("washboard").innerHTML=P.map(p=>`<div><span><span class="dot" style="--c:${COL[p]}"></span> ${short(p)}</span><b>${RH.wash_for[p]||0}<span style="font-size:14px;color:var(--muted)"> / ${RH.wash_against[p]||0}</span></b><span>5–0s dealt / suffered</span></div>`).join("");
+  const hdr=`<div class="strip hdr">${[-5,-4,-3,-2,-1,0,1,2,3,4,5].map(m=>`<span>${m>0?"+"+m:m}</span>`).join("")}</div>`;
+  const rows=Object.entries(RH.pairs).map(([k,v])=>{const [a,b]=k.split("|");const mx=Math.max(...Object.values(v.margin));
+    const strip=`<div class="strip">${[-5,-4,-3,-2,-1,0,1,2,3,4,5].map(m=>{const c=v.margin[m]||0;const col=m>0?COL[a]:m<0?COL[b]:"var(--muted)";return `<span style="--sc:${col};--sa:${c?(0.15+0.7*c/mx).toFixed(2):0}" title="${c} match${c===1?"":"es"} at ${m>0?"+"+m:m}"><b>${c||""}</b></span>`}).join("")}</div>`;
+    const dec=v.round_w+v.round_l;
+    return `<tr><td class="pair"><span class="dot" style="--c:${COL[a]}"></span> ${short(a)} <span class="l">v</span> <span class="dot" style="--c:${COL[b]}"></span> ${short(b)}<span class="sub" style="display:block">${v.n} shared days</span></td>
+      <td class="num">${v.round_w}–${v.round_l}<span class="sub" style="display:block">${v.round_t} tied · ${Math.round(100*v.round_w/dec)}%</span></td>
+      <td class="num">${v.wash_a.length}–${v.wash_b.length}</td>
+      <td class="num">${v.upsets_a}–${v.upsets_b}</td>
+      <td>${strip}</td></tr>`;}).join("");
+  document.getElementById("rhtab").innerHTML=`<thead><tr><th>Pair</th><th>Rounds (W–L)</th><th>5–0s</th><th>Won day, lost rounds</th><th>${hdr}</th></tr></thead><tbody>${rows}</tbody>`;
+  document.getElementById("rhins").innerHTML=RHINS.map(([t,h,p])=>`<article><span class="tag">${t}</span><h3>${h}</h3><p>${p}</p></article>`).join("");
+})();
+const DINS=[
+ ["Ravi", "Fewer big misses, not just more perfect rounds", "57% of Ravi's rounds are 95 or better, and only 1.6% are under 70. His variance is 75, against Kevan's 135 and Rahul's 164. He's had 29 days where every round was 90+. Kevan has had 9 and Rahul 6."],
+ ["Rahul", "High ceiling, expensive misses", "Rahul has 46 perfect rounds but also 6 under 50. 27% of all the points he drops come from rounds under 70, against Ravi's 12%."],
+ ["Kevan", "Round 5 is Kevan's problem round", "On 44% of days his last round is strictly his worst, against 30% for Ravi."],
+ ["Shape", "Everyone's typical round is similar", "Medians are 96, 93 and 93. The gap between you shows up in the bottom tail: Ravi's worst 10% of rounds are 83 or lower, Kevan's 77 and Rahul's 76."],
+];
+const CINS=[
+ ["Elo", "Ravi 1579, Kevan 1467, Rahul 1454", "Ravi has pulled clear again after his ratings were at their tightest last week. He's still below his 1697 peak (5 Sep). Rahul's season high is 1522 (15 Oct)."],
+ ["Bounce-back", "Ravi comes back angry", "After his 9 bad days Ravi averaged 939 the next day, well above his usual 917. Rahul also bounces back (886 after a bad day, against his 868 average)."],
+ ["No hot hand", "Yesterday tells you nothing", "Day-to-day correlations are −0.07, −0.06 and −0.04."],
+ ["Posting order", "Good scores get posted fast", "Everyone averages more when they post first: Kevan 900 against 874, Rahul 902 against 865. That's almost certainly because people post quicker after a good game, not because going first helps."],
+ ["Dream team", "Lionpack best-ball averages 95.7 per round", "Taking the best of the three of you on every round, Ravi supplies 49% of them, Rahul 27% and Kevan 24%. The best combined day was 17 Sep: 497 out of 500."],
+];
+/* round scores + character */
+(function(){
+  const RD={"bins":["100","95–99","90–94","80–89","70–79","50–69","<50"],"players":{"Ravi":{"n":485,"mean":93,"median":96,"sd":8.7,"var":75,"p10":83.0,"p25":90.0,"p90":100.0,"ge95":57.1,"lt70":1.6,"lt50":4,"bins":[67,210,96,88,16,4,4],"rsd":[4.2,5.2,5.6,8.7,13.3],"rmean":[96.5,95.4,93.9,90.8,88.3],"wday":6.1,"worst_share":12},"Kevan Bhate":{"n":420,"mean":89.3,"median":93.0,"sd":11.6,"var":135,"p10":77.0,"p25":84.8,"p90":99.0,"ge95":42.6,"lt70":6.2,"lt50":3,"bins":[19,160,89,100,26,23,3],"rsd":[6.0,7.0,12.2,10.0,15.8],"rmean":[94.1,92.7,90.7,87.3,82.0],"wday":8.7,"worst_share":25},"Rahul Shah":{"n":355,"mean":88.9,"median":93,"sd":12.8,"var":164,"p10":76.0,"p25":84.5,"p90":100.0,"ge95":42.8,"lt70":6.2,"lt50":6,"bins":[46,106,62,86,33,16,6],"rsd":[6.3,6.3,13.7,11.0,17.7],"rmean":[94.8,93.3,89.3,85.5,81.5],"wday":9.4,"worst_share":27}}}, EX={"elo":{"Ravi":[1512.0,1510.8,1533.6,1554.2,1548.7,1567.7,1584.9,1600.5,1614.7,1620.9,1633.4,1644.9,1655.6,1665.5,1650.8,1661.2,1666.4,1627.6,1639.6,1644.9,1626.0,1590.1,1581.2,1573.1,1541.8,1537.5,1548.3,1567.4,1576.9,1585.7,1594.0,1608.8,1574.3,1590.9,1606.1,1614.4,1627.6,1639.8,1651.1,1661.5,1671.2,1680.4,1689.1,1697.1,1680.6,1641.1,1604.3,1618.3,1607.2,1620.9,1628.0,1634.8,1598.2,1581.7,1597.6,1588.1,1603.4,1605.3,1611.6,1600.9,1608.0,1590.7,1581.7,1597.6,1612.1,1594.5,1601.8,1615.9,1604.8,1612.6,1625.8,1638.0,1649.2,1630.3,1618.0,1625.1,1631.8,1619.5,1600.8,1567.0,1577.0,1584.0,1584.0,1575.8,1592.4,1559.4,1569.3,1569.3,1562.3,1532.0,1542.9,1542.9,1542.9,1542.9,1542.9,1552.4,1571.0,1579.4],"Kevan Bhate":[1488.0,1513.2,1511.9,1486.7,1464.0,1467.7,1470.9,1449.8,1430.7,1424.5,1431.7,1414.1,1422.0,1429.1,1459.3,1439.0,1433.8,1439.6,1421.3,1416.0,1434.9,1465.1,1444.5,1474.0,1476.6,1503.0,1492.2,1493.0,1483.5,1474.7,1466.4,1469.7,1496.6,1496.9,1497.2,1488.9,1489.9,1490.8,1467.7,1470.5,1473.1,1475.4,1453.4,1433.3,1462.8,1489.9,1490.8,1491.7,1468.5,1471.5,1464.4,1457.6,1461.5,1478.0,1456.2,1436.5,1442.8,1424.3,1418.1,1449.9,1442.8,1460.2,1440.1,1446.0,1451.3,1451.3,1444.0,1449.5,1478.3,1470.5,1473.3,1451.8,1432.2,1432.2,1414.6,1414.6,1414.6,1398.6,1417.3,1425.3,1425.3,1418.3,1418.3,1402.3,1411.8,1444.4,1444.4,1444.4,1474.0,1500.6,1489.7,1489.7,1489.7,1489.7,1489.7,1489.7,1466.7,1466.7],"Rahul Shah":[null,1476.0,1454.5,1459.1,1487.3,1464.6,1444.1,1449.7,1454.6,1454.6,1434.9,1441.0,1422.4,1405.4,1389.8,1399.8,1399.8,1432.7,1439.1,1439.1,1439.1,1444.8,1474.3,1452.8,1481.6,1459.5,1459.5,1439.6,1439.6,1439.6,1439.6,1421.5,1429.1,1412.1,1396.7,1396.7,1382.5,1369.4,1381.2,1367.9,1355.7,1344.2,1357.5,1369.6,1356.6,1369.0,1404.9,1390.0,1424.3,1407.6,1407.6,1407.6,1440.2,1440.2,1446.2,1475.4,1453.9,1470.3,1470.3,1449.2,1449.2,1449.2,1478.2,1456.4,1436.6,1454.2,1454.2,1434.7,1416.9,1416.9,1400.9,1410.2,1418.5,1437.5,1467.4,1460.3,1453.6,1481.9,1481.9,1507.6,1497.7,1497.7,1497.7,1521.9,1495.8,1496.2,1486.3,1486.3,1463.7,1467.4,1467.4,1467.4,1467.4,1467.4,1467.4,1458.0,1462.2,1453.9]},"elo_now":{"Ravi":1579,"Kevan Bhate":1467,"Rahul Shah":1454},"elo_peak":{"Ravi":[1697,"2026-09-05"],"Kevan Bhate":[1513,"2026-07-25"],"Rahul Shah":[1522,"2026-10-15"]},"bounce":{"Ravi":{"after_bad":939.1,"nbad":9,"after_good":922.4,"ngood":9,"mean":917.2,"autocorr":-0.07},"Kevan Bhate":{"after_bad":870.4,"nbad":11,"after_good":843.2,"ngood":10,"mean":876.0,"autocorr":-0.06},"Rahul Shah":{"after_bad":886,"nbad":9,"after_good":882.4,"ngood":5,"mean":867.8,"autocorr":-0.04}},"firstmover":{"Ravi":{"first":918.7,"nf":80,"later":901.9,"nl":12},"Kevan Bhate":{"first":900.3,"nf":7,"later":873.7,"nl":77},"Rahul Shah":{"first":902.2,"nf":5,"later":865.2,"nl":66}},"dream":{"n":63,"avg_rounds":95.7,"best_day":["2026-09-17",497],"contrib":{"Ravi":49.0,"Kevan Bhate":24.2,"Rahul Shah":26.8}},"collapse":{"Ravi":{"n":97,"r5worst":30,"all90":30,"n_all90":29},"Kevan Bhate":{"n":84,"r5worst":44,"all90":11,"n_all90":9},"Rahul Shah":{"n":71,"r5worst":37,"all90":8,"n_all90":6}},"days":["2026-07-24","2026-07-25","2026-07-26","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31","2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-08","2026-08-09","2026-08-10","2026-08-11","2026-08-12","2026-08-13","2026-08-14","2026-08-15","2026-08-16","2026-08-17","2026-08-18","2026-08-19","2026-08-20","2026-08-21","2026-08-22","2026-08-23","2026-08-24","2026-08-25","2026-08-26","2026-08-27","2026-08-28","2026-08-29","2026-08-30","2026-08-31","2026-09-01","2026-09-02","2026-09-03","2026-09-04","2026-09-05","2026-09-06","2026-09-07","2026-09-08","2026-09-09","2026-09-10","2026-09-11","2026-09-12","2026-09-13","2026-09-14","2026-09-15","2026-09-16","2026-09-17","2026-09-18","2026-09-19","2026-09-20","2026-09-21","2026-09-22","2026-09-23","2026-09-24","2026-09-25","2026-09-26","2026-09-27","2026-09-28","2026-09-29","2026-09-30","2026-10-01","2026-10-02","2026-10-03","2026-10-04","2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-09","2026-10-10","2026-10-11","2026-10-12","2026-10-13","2026-10-14","2026-10-15","2026-10-16","2026-10-17","2026-10-18","2026-10-19","2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-24","2026-10-25","2026-10-26","2026-10-27","2026-10-28","2026-10-29"]};
+  const short=p=>SHORT[p]||p;
+  const BC=["var(--b1)","var(--b2)","var(--b3)","var(--b4)","var(--b5)","var(--b6)","var(--b7)"], LT=[false,false,false,true,true,true,false];
+  document.getElementById("bkey").innerHTML=RD.bins.map((b,i)=>`<span><i style="background:${BC[i]}"></i>${b}</span>`).join("");
+  document.getElementById("distbars").innerHTML=P.map(p=>{const o=RD.players[p];const tot=o.n;
+    return `<div class="dbar"><div class="nm"><span class="dot" style="--c:${COL[p]}"></span>${short(p)}</div><div class="bar">${o.bins.map((c,i)=>{const w=100*c/tot;return c?`<span class="${LT[i]?"lt":""}" style="width:${w}%;background:${BC[i]}" title="${RD.bins[i]}: ${c} rounds (${w.toFixed(1)}%)">${w>=6?Math.round(w)+"%":""}</span>`:""}).join("")}</div></div>`}).join("");
+  const rows=[["Rounds",o=>o.n],["Average",o=>o.mean.toFixed(1)],["Median",o=>o.median],["SD",o=>o.sd.toFixed(1)],["Variance",o=>o.var],["Bottom 10% of rounds below",o=>Math.round(o.p10)],["Rounds 95+",o=>o.ge95+"%"],["Rounds under 70",o=>o.lt70+"%"],["Points lost to bad rounds",o=>o.worst_share+"%"],["Spread within a day (SD)",o=>o.wday.toFixed(1)],
+    ["Days with every round 90+",(o,p)=>`${EX.collapse[p].n_all90} <span class="sub">(${EX.collapse[p].all90}%)</span>`],["Round 5 your worst",(o,p)=>EX.collapse[p].r5worst+"% of days"],["SD by round, R1→R5",o=>o.rsd.map(x=>Math.round(x)).join(" · ")]];
+  document.getElementById("disttab").innerHTML=`<thead><tr><th></th>${P.map(p=>`<th>${short(p)}</th>`).join("")}</tr></thead><tbody>${rows.map(([k,f])=>`<tr><td>${k}</td>${P.map(p=>`<td class="num">${f(RD.players[p],p)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  document.getElementById("distins").innerHTML=DINS.map(([t,h,p])=>`<article><span class="tag">${t}</span><h3>${h}</h3><p>${p}</p></article>`).join("");
+  // elo chart
+  document.getElementById("elolegend").innerHTML=P.map(p=>`<span style="--c:${COL[p]}"><i></i>${short(p)}</span>`).join("");
+  const box=document.getElementById("elochart");
+  function draw(){
+    const W=box.clientWidth||900,H=Math.max(240,Math.min(340,W*0.36)),m={l:44,r:56,t:12,b:26},iw=W-m.l-m.r,ih=H-m.t-m.b,days=EX.days,n=days.length;
+    const vals=P.flatMap(p=>EX.elo[p]).filter(v=>v!=null);const lo=Math.floor(Math.min(...vals)/50)*50,hi=Math.ceil(Math.max(...vals)/50)*50;
+    const x=i=>m.l+iw*i/(n-1),y=v=>m.t+ih*(1-(v-lo)/(hi-lo));let g="";
+    for(let v=lo;v<=hi;v+=50) g+=`<line x1="${m.l}" x2="${m.l+iw}" y1="${y(v)}" y2="${y(v)}" stroke="${v===1500?"var(--muted)":"var(--grid)"}"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+    days.forEach((d,i)=>{if(d.endsWith("-01")||i===0) g+=`<text x="${x(i)+4}" y="${H-8}">${fmtD(d)}</text><line x1="${x(i)}" x2="${x(i)}" y1="${m.t}" y2="${m.t+ih}" stroke="var(--grid)"/>`;});
+    let s="",labels=[];
+    P.forEach(p=>{const a=EX.elo[p];let ds="",pen=false;a.forEach((v,i)=>{if(v==null){pen=false;return;}ds+=(pen?"L":"M")+x(i).toFixed(1)+","+y(v).toFixed(1);pen=true;});
+      s+=`<path d="${ds}" fill="none" stroke="${COL[p]}" stroke-width="2.2" stroke-linejoin="round"/>`;labels.push({y:y(a[n-1]),v:a[n-1]});s+=`<circle cx="${x(n-1)}" cy="${y(a[n-1])}" r="4" fill="${COL[p]}" stroke="var(--card)" stroke-width="2"/>`;});
+    labels.sort((a,b)=>a.y-b.y);for(let i=1;i<labels.length;i++) if(labels[i].y-labels[i-1].y<14) labels[i].y=labels[i-1].y+14;
+    labels.forEach(l=>s+=`<text x="${m.l+iw+8}" y="${l.y+4}" style="fill:var(--ink)">${Math.round(l.v)}</text>`);
+    box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Elo rating over time">${g}${s}<line id="exh" x1="0" x2="0" y1="${m.t}" y2="${m.t+ih}" stroke="var(--muted)" stroke-dasharray="3 3" opacity="0"/></svg><div class="tip" hidden></div>`;
+    const svg=box.querySelector("svg"),tip=box.querySelector(".tip"),xh=svg.querySelector("#exh");
+    const mv=ev=>{const r=svg.getBoundingClientRect(),sx=(ev.clientX-r.left)*W/r.width,i=Math.max(0,Math.min(n-1,Math.round((sx-m.l)/iw*(n-1))));xh.setAttribute("x1",x(i));xh.setAttribute("x2",x(i));xh.setAttribute("opacity",1);
+      tip.innerHTML=`<b>${fmtDW(days[i])}</b>`+P.map(p=>[p,EX.elo[p][i]]).sort((a,b)=>(b[1]??0)-(a[1]??0)).map(([p,v])=>`<div class="r"><span><span class="dot" style="--c:${COL[p]}"></span>${short(p)}</span><span class="mono">${v==null?"–":Math.round(v)}</span></div>`).join("");
+      tip.hidden=false;const px=x(i)*r.width/W,tw=tip.offsetWidth;tip.style.left=(px+12+tw>r.width?px-12-tw:px+12)+"px";tip.style.top="8px";};
+    svg.addEventListener("pointermove",mv);svg.addEventListener("pointerdown",mv);svg.addEventListener("pointerleave",()=>{tip.hidden=true;xh.setAttribute("opacity",0);});
+  }
+  draw(); addEventListener("resize",()=>setTimeout(draw,120));
+  const b=EX.bounce,f=EX.firstmover;
+  const crow=[["Elo now",p=>EX.elo_now[p]],["Elo peak",p=>`${EX.elo_peak[p][0]} <span class="sub">${fmtD(EX.elo_peak[p][1])}</span>`],
+    ["Next day after a bad day",p=>b[p].after_bad==null?"–":`${b[p].after_bad} <span class="sub">(${b[p].nbad}×, avg ${Math.round(b[p].mean)})</span>`],
+    ["Next day after a good day",p=>b[p].after_good==null?"–":`${b[p].after_good} <span class="sub">(${b[p].ngood}×)</span>`],
+    ["Day-to-day correlation",p=>b[p].autocorr==null?"–":(b[p].autocorr>0?"+":"")+b[p].autocorr.toFixed(2)],
+    ["Avg when first to post",p=>f[p].first==null?"–":`${f[p].first} <span class="sub">(${f[p].nf}×)</span>`],
+    ["Avg when someone posted first",p=>f[p].later==null?"–":`${f[p].later} <span class="sub">(${f[p].nl}×)</span>`],
+    ["Share of dream-team rounds",p=>EX.dream.contrib[p]+"%"]];
+  document.getElementById("chartab").innerHTML=`<thead><tr><th></th>${P.map(p=>`<th>${short(p)}</th>`).join("")}</tr></thead><tbody>${crow.map(([k,fn])=>`<tr><td>${k}</td>${P.map(p=>`<td class="num">${fn(p)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  document.getElementById("charins").innerHTML=CINS.map(([t,h,p])=>`<article><span class="tag">${t}</span><h3>${h}</h3><p>${p}</p></article>`).join("");
+})();
+const OTINS=[
+ ["Whitewashes", "The sweeps have dried up", "7 of the 14 whitewashes came in the first three weeks. Since 1 Sep there have been three, and none since Ravi over Kevan on 15 Oct."],
+ ["Streaks", "Ravi's 11 straight wins", "Ravi won every day from 26 Aug to 5 Sep. Kevan's 3 in a row (17–21 Oct) is the only other run longer than two. Ravi is on 4 now."],
+ ["Chaos", "1 Sep was the most divided day", "The Titanic day: Ravi 952, Kevan 817, Rahul 601, a 351-point spread. The calmest was 25 Aug: 952, 956, 954."],
+ ["Weekly form", "Ravi and Rahul both up this week", "Ravi's weekly median went from 907 last week to 922. Rahul's went from 876 to 913. Kevan's is 883, from two games."],
+ ["Mondays", "Ravi's Monday problem", "Ravi averages 889 on Mondays and 911–931 on every other day."],
+];
+/* over time */
+(function(){
+  const days=D.days, short=p=>SHORT[p]||p;
+  const L=LOG;
+  const wkOf=d=>{const t=new Date(d+"T12:00:00Z");const wd=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-wd);return t.toISOString().slice(0,10);};
+  const weeks=[...new Set(days.map(wkOf))];
+  const q=(a,p)=>{const s=[...a].sort((x,y)=>x-y);const i=(s.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);};
+  const box=a=>{const q1=q(a,.25),q3=q(a,.75),iqr=q3-q1,lo=Math.min(...a.filter(v=>v>=q1-1.5*iqr)),hi=Math.max(...a.filter(v=>v<=q3+1.5*iqr));return {q1,med:q(a,.5),q3,lo,hi,out:a.filter(v=>v<lo||v>hi)};};
+  const tipOn=(boxEl)=>{const t=document.createElement("div");t.className="tip";t.hidden=true;boxEl.appendChild(t);return t;};
+  const wlab=w=>{const t=new Date(w+"T12:00:00Z");return t.toLocaleDateString("en-GB",{day:"numeric",month:"short",timeZone:"UTC"});};
+  function hoverify(el,tip){el.querySelectorAll("[data-tip]").forEach(n=>{n.style.cursor="default";n.addEventListener("pointerenter",ev=>{tip.innerHTML=n.getAttribute("data-tip");tip.hidden=false;});n.addEventListener("pointermove",ev=>{const r=el.getBoundingClientRect();const x=ev.clientX-r.left,y=ev.clientY-r.top;const tw=tip.offsetWidth;tip.style.left=(x+14+tw>r.width?x-14-tw:x+14)+"px";tip.style.top=Math.max(0,y-10)+"px";});n.addEventListener("pointerleave",()=>tip.hidden=true);});}
+  // margins per player per week
+  const mg={},wwd={},wws={};
+  P.forEach(p=>{mg[p]={};wwd[p]={};wws[p]={};weeks.forEach(w=>{mg[p][w]=[];wwd[p][w]=0;wws[p][w]=0;});});
+  days.forEach(d=>{const e=L[d]||{};const pl=P.filter(p=>e[p]);pl.forEach(a=>pl.forEach(b=>{if(a===b)return;let w=0,l=0;for(let i=0;i<5;i++){if(e[a][1][i]>e[b][1][i])w++;else if(e[a][1][i]<e[b][1][i])l++;}const wk=wkOf(d);mg[a][wk].push(w-l);if(w===5)wwd[a][wk]++;if(l===5)wws[a][wk]++;}));});
+  function drawWW(){
+    const el=document.getElementById("wwbox");const W=el.clientWidth||900,rowH=118,m={l:96,r:16,t:8,b:26},iw=W-m.l-m.r,H=m.t+rowH*P.length+m.b,n=weeks.length,bw=Math.min(26,iw/n*0.5);
+    const x=i=>m.l+iw*(i+0.5)/n;let s="";
+    P.forEach((p,pi)=>{const top=m.t+pi*rowH,ih=rowH-26,y=v=>top+10+ih*(1-(v+5)/10);
+      s+=`<text class="ttl" x="${m.l-12}" y="${top+10+ih/2+4}" text-anchor="end" style="fill:var(--ink)">${short(p)}</text>`;
+      [-5,0,5].forEach(v=>s+=`<line x1="${m.l}" x2="${m.l+iw}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?"var(--muted)":"var(--grid)"}" ${v===0?'stroke-dasharray="3 3"':''}/><text x="${m.l-4}" y="${y(v)+4}" text-anchor="end" style="font-size:10px">${v>0?"+"+v:v}</text>`);
+      weeks.forEach((w,i)=>{const a=mg[p][w];if(!a.length)return;const b=box(a);const cx=x(i);
+        const tip=`<b>${short(p)} · week of ${wlab(w)}</b><div>${a.length} matches · median ${b.med>0?"+":""}${b.med}</div><div>5–0s dealt ${wwd[p][w]} · suffered ${wws[p][w]}</div>`;
+        s+=`<g data-tip="${tip.replace(/"/g,"&quot;")}"><rect x="${cx-bw/2-4}" y="${top}" width="${bw+8}" height="${ih+20}" fill="transparent"/>
+          <line x1="${cx}" x2="${cx}" y1="${y(b.lo)}" y2="${y(b.hi)}" stroke="${COL[p]}" stroke-width="1.5"/>
+          <rect x="${cx-bw/2}" y="${y(b.q3)}" width="${bw}" height="${Math.max(2,y(b.q1)-y(b.q3))}" rx="3" fill="${COL[p]}" fill-opacity=".28" stroke="${COL[p]}" stroke-width="1.5"/>
+          <line x1="${cx-bw/2}" x2="${cx+bw/2}" y1="${y(b.med)}" y2="${y(b.med)}" stroke="${COL[p]}" stroke-width="2.5"/>
+          ${b.out.map(v=>`<circle cx="${cx}" cy="${y(v)}" r="2.5" fill="${COL[p]}"/>`).join("")}</g>`;
+        if(wwd[p][w]) s+=`<text x="${cx}" y="${y(5)-3}" text-anchor="middle" style="fill:${COL[p]};font-size:13px">▲</text>${wwd[p][w]>1?`<text x="${cx+8}" y="${y(5)-4}" style="fill:var(--ink);font-size:10px">${wwd[p][w]}</text>`:""}`;
+        if(wws[p][w]) s+=`<text x="${cx}" y="${y(-5)+13}" text-anchor="middle" style="fill:var(--bad);font-size:13px">▼</text>${wws[p][w]>1?`<text x="${cx+8}" y="${y(-5)+12}" style="fill:var(--ink);font-size:10px">${wws[p][w]}</text>`:""}`;
+      });});
+    weeks.forEach((w,i)=>{if(i%2===0||n<10) s+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${wlab(w)}</text>`;});
+    el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly round-margin boxplots with whitewashes">${s}</svg>`;hoverify(el,tipOn(el));
+  }
+  function drawWK(){
+    const el=document.getElementById("wkbox");const W=el.clientWidth||900,H=Math.max(260,Math.min(360,W*0.38)),m={l:44,r:12,t:10,b:26},iw=W-m.l-m.r,ih=H-m.t-m.b,n=weeks.length;
+    const all=Object.values(L).flatMap(e=>P.filter(p=>e[p]).map(p=>e[p][0]));const lo=Math.floor(Math.min(...all)/50)*50,hi=1000;
+    const y=v=>m.t+ih*(1-(v-lo)/(hi-lo)),slot=iw/n,bw=Math.max(4,Math.min(16,slot*0.8/P.length-3));let s="";
+    for(let v=lo;v<=hi;v+=50) s+=`<line x1="${m.l}" x2="${m.l+iw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+    weeks.forEach((w,i)=>{const c0=m.l+slot*i+slot/2,act=P.filter(p=>days.some(d=>wkOf(d)===w&&L[d]&&L[d][p]));
+      act.forEach((p,j)=>{const a=days.filter(d=>wkOf(d)===w&&L[d]&&L[d][p]).map(d=>L[d][p][0]);const b=box(a);const cx=c0+(j-(act.length-1)/2)*(bw+3);
+        const tip=`<b>${short(p)} · week of ${wlab(w)}</b><div>${a.length} games · median ${Math.round(b.med)}</div><div>range ${Math.min(...a)}–${Math.max(...a)}</div>`;
+        s+=`<g data-tip="${tip}"><rect x="${cx-bw/2-1}" y="${m.t}" width="${bw+2}" height="${ih}" fill="transparent"/><line x1="${cx}" x2="${cx}" y1="${y(b.lo)}" y2="${y(b.hi)}" stroke="${COL[p]}" stroke-width="1.2"/>
+          <rect x="${cx-bw/2}" y="${y(b.q3)}" width="${bw}" height="${Math.max(2,y(b.q1)-y(b.q3))}" rx="2" fill="${COL[p]}" fill-opacity=".3" stroke="${COL[p]}" stroke-width="1.2"/>
+          <line x1="${cx-bw/2}" x2="${cx+bw/2}" y1="${y(b.med)}" y2="${y(b.med)}" stroke="${COL[p]}" stroke-width="2.2"/>${b.out.map(v=>`<circle cx="${cx}" cy="${y(v)}" r="2.3" fill="${COL[p]}"/>`).join("")}</g>`;});
+      if(i%2===0||n<10) s+=`<text x="${c0}" y="${H-6}" text-anchor="middle">${wlab(w)}</text>`;});
+    el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly boxplots of daily scores">${s}</svg>`;hoverify(el,tipOn(el));
+  }
+  function drawCal(){
+    const el=document.getElementById("cal");const W=el.clientWidth||460,n=weeks.length,m={l:30,r:4,t:4,b:22},cs=Math.min(30,(W-m.l-m.r)/n-3),H=m.t+7*(cs+3)+m.b;let s="";
+    ["M","T","W","T","F","S","S"].forEach((d,i)=>s+=`<text x="${m.l-8}" y="${m.t+i*(cs+3)+cs/2+4}" text-anchor="end">${d}</text>`);
+    days.forEach(d=>{const w=weeks.indexOf(wkOf(d)),wd=(new Date(d+"T12:00:00Z").getUTCDay()+6)%7,e=L[d]||{},pl=P.filter(p=>e[p]);const xx=m.l+w*(cs+3),yy=m.t+wd*(cs+3);
+      if(pl.length<2){s+=`<rect x="${xx}" y="${yy}" width="${cs}" height="${cs}" rx="4" fill="none" stroke="var(--grid)"/>`;return;}
+      const sc=pl.map(p=>[p,e[p][0]]).sort((a,b)=>b[1]-a[1]);const winners=sc.filter(x=>x[1]===sc[0][1]).map(x=>x[0]);const marg=sc[0][1]-sc[1][1];const op=winners.length>1?0.35:(0.3+0.7*Math.min(1,marg/80));
+      const fill=winners.length>1?"var(--muted)":COL[winners[0]];
+      const tip=`<b>${fmtDW(d)}</b>`+sc.map(([p,v])=>`<div class="r"><span><span class="dot" style="--c:${COL[p]}"></span>${short(p)}</span><span class="mono">${v}</span></div>`).join("");
+      s+=`<rect data-tip="${tip.replace(/"/g,"&quot;")}" x="${xx}" y="${yy}" width="${cs}" height="${cs}" rx="4" fill="${fill}" fill-opacity="${op.toFixed(2)}"/>`;});
+    weeks.forEach((w,i)=>{if(i%3===0) s+=`<text x="${m.l+i*(cs+3)}" y="${H-6}">${wlab(w)}</text>`;});
+    el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Calendar of daily winners">${s}</svg>`;hoverify(el,tipOn(el));
+    document.getElementById("calkey").innerHTML=P.map(p=>`<span><i style="background:${COL[p]}"></i>${short(p)}</span>`).join("")+`<span><i style="background:var(--muted);opacity:.4"></i>tie</span><span><i style="border:1px solid var(--grid)"></i>&lt;2 played</span>`;
+  }
+  function drawSwarm(){
+    const el=document.getElementById("swarm");const W=el.clientWidth||460,rowH=Math.max(64,Math.round(260/P.length)),m={l:70,r:10,t:6,b:24},iw=W-m.l-m.r,H=m.t+rowH*P.length+m.b;
+    const all=Object.values(L).flatMap(e=>P.filter(p=>e[p]).map(p=>e[p][0]));const lo=Math.floor(Math.min(...all)/50)*50,hi=1000,x=v=>m.l+iw*(v-lo)/(hi-lo);let s="";
+    for(let v=lo;v<=hi;v+=50) s+=`<line x1="${x(v)}" x2="${x(v)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--grid)"/>${(v-lo)%100===0?`<text x="${x(v)}" y="${H-6}" text-anchor="middle">${v}</text>`:""}`;
+    P.forEach((p,pi)=>{const cy=m.t+pi*rowH+rowH/2;const pts=days.filter(d=>L[d]&&L[d][p]).map(d=>[L[d][p][0],d]).sort((a,b)=>a[0]-b[0]);const placed=[];const r=2.7;
+      s+=`<text x="${m.l-8}" y="${cy+4}" text-anchor="end" style="fill:var(--ink);font-family:'IBM Plex Sans';font-size:12.5px">${short(p)}</text>`;
+      pts.forEach(([v,d])=>{const px=x(v);let off=0,k=0;while(placed.some(([qx,qy])=>Math.hypot(qx-px,qy-(cy+off))<2*r+0.6)){k++;off=(k%2?1:-1)*Math.ceil(k/2)*(2*r*0.85);if(Math.abs(off)>rowH/2-4)break;}placed.push([px,cy+off]);
+        s+=`<circle data-tip="<b>${short(p)}</b><div>${fmtDW(d)} · ${v}</div>" cx="${px}" cy="${cy+off}" r="${r}" fill="${COL[p]}" fill-opacity=".8"/>`;});
+      const med=q(pts.map(z=>z[0]),.5);s+=`<line x1="${x(med)}" x2="${x(med)}" y1="${cy-rowH/2+4}" y2="${cy+rowH/2-4}" stroke="var(--ink)" stroke-width="1.5"/>`;});
+    el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Every daily score per player">${s}</svg>`;hoverify(el,tipOn(el));
+  }
+  function drawChaos(){
+    const el=document.getElementById("chaos");const W=el.clientWidth||900,H=200,m={l:40,r:10,t:16,b:24},iw=W-m.l-m.r,ih=H-m.t-m.b,n=days.length;
+    const sp=days.map(d=>{const e=L[d]||{},pl=P.filter(p=>e[p]);if(pl.length<3)return null;const v=pl.map(p=>e[p][0]);return {d,s:Math.max(...v)-Math.min(...v),e,pl};});
+    const mx=Math.ceil(Math.max(...sp.filter(Boolean).map(z=>z.s))/50)*50,y=v=>m.t+ih*(1-v/mx),bw=Math.max(2,iw/n-2);let s="";
+    for(let v=0;v<=mx;v+=100) s+=`<line x1="${m.l}" x2="${m.l+iw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+    const top=sp.filter(Boolean).sort((a,b)=>b.s-a.s).slice(0,3).map(z=>z.d);
+    sp.forEach((z,i)=>{if(!z)return;const xx=m.l+iw*i/n;const tip=`<b>${fmtDW(z.d)} · spread ${z.s}</b>`+z.pl.map(p=>[p,z.e[p][0]]).sort((a,b)=>b[1]-a[1]).map(([p,v])=>`<div class="r"><span><span class="dot" style="--c:${COL[p]}"></span>${short(p)}</span><span class="mono">${v}</span></div>`).join("");
+      s+=`<rect data-tip="${tip.replace(/"/g,"&quot;")}" x="${xx}" y="${y(z.s)}" width="${bw}" height="${m.t+ih-y(z.s)}" rx="2" fill="${top.includes(z.d)?"var(--ink)":"var(--muted)"}" fill-opacity="${top.includes(z.d)?0.85:0.45}"/>`;
+      if(top.includes(z.d)) s+=`<text x="${xx+bw/2}" y="${y(z.s)-4}" text-anchor="middle" style="fill:var(--ink)">${fmtD(z.d)}</text>`;});
+    days.forEach((d,i)=>{if(d.endsWith("-01")) s+=`<text x="${m.l+iw*i/n}" y="${H-6}">${fmtD(d)}</text>`;});
+    el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily score spread">${s}</svg>`;hoverify(el,tipOn(el));
+  }
+  document.getElementById("otlegend").innerHTML=P.map(p=>`<span style="--c:${COL[p]}"><i></i>${short(p)}</span>`).join("");
+  const all=()=>{drawWW();drawWK();drawCal();drawSwarm();drawChaos();};all();
+  let rt2;addEventListener("resize",()=>{clearTimeout(rt2);rt2=setTimeout(all,150);});
+  document.getElementById("otins").innerHTML=OTINS.map(([t,h,p])=>`<article><span class="tag">${t}</span><h3>${h}</h3><p>${p}</p></article>`).join("");
+})();
+</script>
+
+</body></html>
